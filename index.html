@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#07131f" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="stylesheet" href="styles.css" />
+<title>FitQuest</title>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div><div class="brand">FIT<span>QUEST</span></div><div class="sub" id="todayLabel"></div></div>
+    <button class="iconbtn" id="settingsBtn" aria-label="Einstellungen">⚙️</button>
+  </header>
+  <main id="view"></main>
+  <nav class="bottomnav">
+    <button data-view="home" class="active"><span>🏠</span>Heute</button>
+    <button data-view="training"><span>🏋️</span>Training</button>
+    <button data-view="skills"><span>🗺️</span>Skills</button>
+    <button data-view="body"><span>📷</span>Körper</button>
+    <button data-view="progress"><span>🏆</span>Erfolge</button>
+  </nav>
+</div>
+<div id="modal" class="modal hidden"><div class="modalcard"><button class="close" id="closeModal">✕</button><div id="modalBody"></div></div></div>
+<div id="toast" class="toast hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>
