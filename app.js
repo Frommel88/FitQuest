@@ -230,12 +230,49 @@ function exerciseIllustration(e,size='small'){
   return `<div class="exvisual ${size}" title="${label}"><svg viewBox="0 0 92 68" role="img" aria-label="Schematische Ausführung: ${label}" preserveAspectRatio="xMidYMid meet">${body}</svg><span>Start → Ziel</span></div>`;
 }
 
-function sessionDone(id){return !!(state.activeWorkout&&state.activeWorkout.date===localDateKey()&&state.activeWorkout.done&&state.activeWorkout.done[id])}
+function ensureWorkoutShape(){
+  const w=state.activeWorkout;if(!w)return null;
+  w.done=w.done||{};w.entries=w.entries||{};
+  for(const id of (w.ids||[])){
+    if(!w.entries[id])w.entries[id]={sets:[],completed:!!w.done[id]};
+    if(w.done[id])w.entries[id].completed=true;
+  }
+  return w;
+}
+function workoutEntry(id){const w=ensureWorkoutShape();if(!w)return null;return w.entries[id]||(w.entries[id]={sets:[],completed:false})}
+function sessionDone(id){const e=workoutEntry(id);return !!e?.completed}
+function sessionSetCount(id){return workoutEntry(id)?.sets?.length||0}
 function startSession(mode,ids,title){
   const cur=state.activeWorkout;
   if(!cur||cur.date!==localDateKey()||cur.mode!==mode||JSON.stringify(cur.ids)!==JSON.stringify(ids)){
-    state.activeWorkout={date:localDateKey(),mode,title,ids:[...ids],done:{}};save();
+    state.activeWorkout={date:localDateKey(),mode,title,ids:[...ids],done:{},entries:{}};
   }
+  ensureWorkoutShape();save();
+}
+function isDumbbellExercise(e){return /kurzhantel/i.test(e?.equipment||'')||/kurzhantel|hantel/i.test(e?.name||'')}
+function isUnilateralExercise(e){
+  if(e?.sideMode==='unilateral')return true;if(e?.sideMode==='bilateral')return false;
+  return /(bulgarian|einbeinig|einarmig|ein-armig|ein-arm|eseltritt|donkey|split squat|pistol|shrimp|dragon squat|über-kreuz|ueber-kreuz)/i.test(e?.name||'');
+}
+function defaultDumbbellCount(e){return /(einarmig|ein-armig|ein-arm|eseltritt|donkey)/i.test(e?.name||'')?1:2}
+function parseNum(v){const n=parseFloat(String(v??'').replace(',','.'));return Number.isFinite(n)?n:null}
+function formatKg(n){return Number.isFinite(n)?String(Math.round(n*100)/100).replace('.',',')+' kg':''}
+
+function syncCompletedExerciseHistory(id){
+  const e=getExercise(id),ent=workoutEntry(id);if(!e||!ent?.completed)return;
+  e.history=e.history||[];
+  let h=[...e.history].reverse().find(x=>x.sessionDate===localDateKey());
+  const summary=ent.sets.map(st=>isUnilateralExercise(e)?`L${st.leftReps||'-'}/R${st.rightReps||'-'}`:(st.reps||'-')).join(', ');
+  const weights=ent.sets.map(st=>st.weightPerDumbbell).filter(Number.isFinite);const bestWeight=weights.length?Math.max(...weights):null;
+  if(!h){h={date:new Date().toISOString(),sessionDate:localDateKey()};e.history.push(h)}
+  h.reps=summary;h.load=bestWeight!=null?`${bestWeight} kg pro Hantel`:e.load;h.weightPerDumbbell=bestWeight;h.sets=structuredClone(ent.sets);
+}
+function latestSessionSummary(id){
+  const ent=workoutEntry(id);if(!ent?.sets?.length)return '';
+  const e=getExercise(id), last=ent.sets[ent.sets.length-1], n=ent.sets.length;
+  const reps=isUnilateralExercise(e)?`L ${last.leftReps||'–'} · R ${last.rightReps||'–'}`:`${last.reps||'–'} Wdh.`;
+  const wt=last.weightPerDumbbell?`${formatKg(last.weightPerDumbbell)} / Hantel${last.dumbbellCount?` · ${last.dumbbellCount}× = ${formatKg(last.weightPerDumbbell*last.dumbbellCount)} gesamt`:''}`:(last.load||'');
+  return `${n} Satz${n===1?'':'e'} · ${reps}${wt?' · '+wt:''}`;
 }
 function training(){showDailyTraining()}
 function trainingTabs(active){return `<div class="tabs"><button class="tab ${active==='daily'?'active':''}" onclick="showDailyTraining()">Heute</button><button class="tab ${active==='custom'?'active':''}" onclick="showCustomBuilder()">Individuell</button><button class="tab ${active==='catalog'?'active':''}" onclick="showAllExercises()">Übungen</button><button class="tab ${active==='challenge'?'active':''}" onclick="challenge()">🕷️ Challenge</button></div>`}
@@ -253,7 +290,7 @@ function workoutBlock(ids,i){
   const letters=['A','B','C','D'];
   return `<section class="pairblock"><div class="pairhead"><b>Wechselblock ${letters[i]}</b><span>abwechselnd</span></div>${ids.map((id,n)=>compactExercise(getExercise(id),n+1)).join('')}</section>`
 }
-function compactExercise(e,n){if(!e)return '';const done=sessionDone(e.id);return `<div class="compact-exercise ${done?'isdone':''}"><div class="exno">${done?'✓':n}</div>${exerciseIllustration(e)}<button class="exercise-main" onclick="logExercise('${e.id}')"><b>${e.name}</b><span>${e.group} · ${e.equipment}</span></button><div class="exercise-target"><b>${e.target||'3 × 8–12'}</b><span>${e.load||'Gewicht offen'}</span></div></div>`}
+function compactExercise(e,n){if(!e)return '';const done=sessionDone(e.id),summary=latestSessionSummary(e.id);return `<div class="compact-exercise ${done?'isdone':''}"><div class="exno">${done?'✓':n}</div>${exerciseIllustration(e)}<button class="exercise-main" onclick="logExercise('${e.id}')"><b>${e.name}</b><span>${e.group} · ${e.equipment}</span>${summary?`<small class="savedset">💾 ${summary}</small>`:''}</button><div class="exercise-target"><b>${e.target||'3 × 8–12'}</b><span>${isDumbbellExercise(e)?'Gewicht je Hantel':(e.load||'Gewicht offen')}</span></div></div>`}
 function groupExercises(exercises,renderRow){
   const groups={};exercises.forEach(e=>(groups[e.group||'Sonstiges']??=[]).push(e));
   return Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0],'de')).map(([g,es])=>`<details class="exgroup"><summary>${g}<span>${es.length}</span></summary><div class="list">${es.map(renderRow).join('')}</div></details>`).join('')
@@ -283,15 +320,62 @@ window.openExerciseForm=()=>modal(`<h2>Neue Übung</h2><div class="formgrid">
 <div class="field"><label>Muskelgruppe</label><input id="fGroup" placeholder="z. B. Rücken"></div>
 <div class="field"><label>Equipment</label><select id="fEq"><option>Körpergewicht</option><option>Kurzhantel</option><option>Kurzhantel + Bank</option><option>Band</option><option>Klimmzugstange</option><option>Sonstiges</option></select></div>
 <div class="field"><label>Gewicht / Band</label><input id="fLoad" placeholder="z. B. 17,5 kg oder lila"></div>
-<div class="field"><label>Ziel</label><input id="fTarget" value="3 × 8–12"></div><div class="field"><label>Eigenes Bild / GIF (optional)</label><input id="fMedia" placeholder="https://…/bild.gif oder .png"></div>
+<div class="field"><label>Ziel</label><input id="fTarget" value="3 × 8–12"></div><div class="field"><label>Seiten getrennt erfassen?</label><select id="fSideMode"><option value="auto">Automatisch erkennen</option><option value="bilateral">Nein</option><option value="unilateral">Ja – links/rechts</option></select></div><div class="field"><label>Eigenes Bild / GIF (optional)</label><input id="fMedia" placeholder="https://…/bild.gif oder .png"></div>
 <button class="btn" onclick="saveExercise()">Übung speichern</button></div>`)
-window.saveExercise=()=>{const name=$('#fName').value.trim();if(!name)return toast('Bitte Namen eingeben');state.exercises.push({id:'u'+Date.now(),name,group:$('#fGroup').value||'Sonstiges',equipment:$('#fEq').value,load:$('#fLoad').value,target:$('#fTarget').value||'3 × 8–12',media:$('#fMedia').value.trim(),active:true,history:[]});save();closeModal();toast('Übung hinzugefügt ✅');showAllExercises()}
-window.logExercise=id=>{const e=getExercise(id);if(!e)return;modal(`<h2>${e.name}</h2>${exerciseIllustration(e,'large')}<div class="tiny visualhint">Schematische Start-/Zielposition. Für komplexe Skills zusätzlich Video/Hilfe nutzen.</div><div class="formgrid"><div class="field"><label>Gewicht / Band</label><input id="lLoad" value="${e.load||''}"></div><div class="field"><label>Geschaffte Wiederholungen / Sekunden</label><input id="lReps" placeholder="z. B. 12, 11, 10"></div><div class="field"><label>Dauer inkl. Satzpausen (Min.)</label><input id="lMin" type="number" min="1" max="30" value="5"></div><div class="field"><label>Wie schwer?</label><select id="lRpe"><option>leicht</option><option selected>passend</option><option>schwer</option><option>sehr schwer</option></select></div>${bodyWeight()?`<div class="notice">Kalorien werden nach MET, Körpergewicht, Dauer und Belastung geschätzt. Hantelgewicht fließt nicht linear ein.</div>`:`<div class="notice">Für Kalorien zuerst dein Körpergewicht unter ⚙️ Einstellungen hinterlegen.</div>`}<button class="btn" onclick="saveLog('${id}')">✅ Leistung speichern & abhaken</button></div>`)}
-window.saveLog=id=>{const e=getExercise(id);const prev=[...(e.history||[])];const load=$('#lLoad').value,reps=$('#lReps').value,rpe=$('#lRpe').value,minutes=Number($('#lMin').value)||5;const kcal=kcalEstimate(e,minutes,rpe);
-  const num=s=>parseFloat(String(s).replace(',','.'));const maxRep=str=>Math.max(0,...String(str).split(/[^0-9.,]+/).map(num).filter(Number.isFinite));const loadNum=num(load),repMax=maxRep(reps);
-  const oldLoads=prev.map(h=>num(h.load)).filter(Number.isFinite),oldReps=prev.map(h=>maxRep(h.reps)).filter(Number.isFinite);const weightPR=Number.isFinite(loadNum)&&(!oldLoads.length||loadNum>Math.max(...oldLoads));const repPR=repMax>0&&(!oldReps.length||repMax>Math.max(...oldReps));
-  e.load=load;e.history=e.history||[];e.history.push({date:new Date().toISOString(),reps,load:e.load,rpe,minutes,kcal});if(kcal!=null)state.calorieLog.push({date:localDateKey(),exerciseId:id,kcal,minutes});if(state.activeWorkout&&state.activeWorkout.date===localDateKey()&&state.activeWorkout.ids.includes(id))state.activeWorkout.done[id]=true;state.activityLog.push({date:localDateKey(),type:'exercise',label:e.name});save();closeModal();
-  if(weightPR||repPR){addXp(40,`🏆 Neuer ${weightPR?'Gewichts-':'Wiederholungs-'}PR!`)}else addXp(15,'Leistung gespeichert!');if(kcal!=null)toast(`≈ ${kcal} kcal für diesen Übungsblock*`);if(currentView==='training'){state.activeWorkout?.mode==='custom'?renderCustomWorkout():showDailyTraining()}}
+window.saveExercise=()=>{const name=$('#fName').value.trim();if(!name)return toast('Bitte Namen eingeben');state.exercises.push({id:'u'+Date.now(),name,group:$('#fGroup').value||'Sonstiges',equipment:$('#fEq').value,load:$('#fLoad').value,target:$('#fTarget').value||'3 × 8–12',media:$('#fMedia').value.trim(),sideMode:$('#fSideMode')?.value||'auto',active:true,history:[]});save();closeModal();toast('Übung hinzugefügt ✅');showAllExercises()}
+window.logExercise=id=>{
+  const e=getExercise(id);if(!e)return;
+  const ent=(state.activeWorkout&&state.activeWorkout.ids?.includes(id))?workoutEntry(id):null;
+  const sets=ent?.sets||[];const unilateral=isUnilateralExercise(e), dumbbell=isDumbbellExercise(e);
+  const setRows=sets.length?sets.map((x,i)=>`<div class="setrow"><b>Satz ${i+1}</b><span>${unilateral?`Links ${x.leftReps||'–'} · Rechts ${x.rightReps||'–'}`:`${x.reps||'–'} Wdh./Sek.`}</span><small>${x.weightPerDumbbell?`${formatKg(x.weightPerDumbbell)} je Hantel · ${x.dumbbellCount||1} Hantel${(x.dumbbellCount||1)>1?'n':''} · ${formatKg(x.weightPerDumbbell*(x.dumbbellCount||1))} gesamt`:x.load||'Körpergewicht'}${x.rpe?' · '+x.rpe:''}</small><button class="iconbtn" onclick="deleteSessionSet('${id}',${i})">✕</button></div>`).join(''):'<div class="empty small">Noch kein Satz gespeichert.</div>';
+  modal(`<h2>${e.name}</h2>${exerciseIllustration(e,'large')}<div class="tiny visualhint">Jeden neuen Satz direkt speichern: Er bleibt erhalten und bringt einmal XP. Beim erneuten Öffnen werden alte Sätze nur angezeigt – ohne doppelte XP.</div>
+  ${ent?`<div class="sessionlog"><div class="sectiontitle mini"><h3>Heutige Sätze</h3><span class="tag green">${sets.length}</span></div>${setRows}</div>`:''}
+  <div class="formgrid">
+  ${dumbbell?`<div class="field"><label>Gewicht pro Hantel (kg)</label><input id="lWeightEach" inputmode="decimal" value="${sets.at(-1)?.weightPerDumbbell??parseNum(e.load)??''}" placeholder="z. B. 20"><div class="tiny">Immer das Gewicht EINER Kurzhantel eintragen.</div></div><div class="field"><label>Wie viele Hanteln nutzt du?</label><select id="lDbCount"><option value="1" ${(sets.at(-1)?.dumbbellCount??defaultDumbbellCount(e))===1?'selected':''}>1 Hantel</option><option value="2" ${(sets.at(-1)?.dumbbellCount??defaultDumbbellCount(e))===2?'selected':''}>2 Hanteln</option></select></div>`:`<div class="field"><label>Gewicht / Band</label><input id="lLoad" value="${sets.at(-1)?.load??e.load??''}" placeholder="z. B. lila Band"></div>`}
+  ${unilateral?`<div class="sidegrid"><div class="field"><label>Links – Wdh. / Sek.</label><input id="lLeft" inputmode="decimal" placeholder="z. B. 10"></div><div class="field"><label>Rechts – Wdh. / Sek.</label><input id="lRight" inputmode="decimal" placeholder="z. B. 10"></div></div>`:`<div class="field"><label>Wiederholungen / Sekunden dieses Satzes</label><input id="lReps" inputmode="decimal" placeholder="z. B. 12"></div>`}
+  <div class="field"><label>Wie schwer war der Satz?</label><select id="lRpe"><option>leicht</option><option selected>passend</option><option>schwer</option><option>sehr schwer</option></select></div>
+  <button class="btn block" onclick="saveSessionSet('${id}')">💾 Satz sofort speichern</button>
+  ${ent?`<button class="btn secondary block" onclick="finishExercise('${id}')">${ent.completed?'✅ Übung abgeschlossen – weitere Sätze trotzdem möglich':'✅ Übung für heute abschließen'}</button>`:''}
+  <div class="tiny">${dumbbell?'Beispiel: 20 kg pro Hantel × 2 = 40 kg Gesamtlast.':''} Kalorien bleiben eine Schätzung aus Körpergewicht, Übungstyp und Zeit/Intensität.</div>
+  </div>`)
+}
+window.saveSessionSet=id=>{
+  const e=getExercise(id);if(!e)return;const unilateral=isUnilateralExercise(e),dumbbell=isDumbbellExercise(e);
+  const set={date:new Date().toISOString(),rpe:$('#lRpe')?.value||'passend'};
+  if(unilateral){set.leftReps=$('#lLeft')?.value.trim()||'';set.rightReps=$('#lRight')?.value.trim()||'';if(!set.leftReps&&!set.rightReps)return toast('Links oder rechts Wiederholungen eintragen');}
+  else{set.reps=$('#lReps')?.value.trim()||'';if(!set.reps)return toast('Wiederholungen oder Sekunden eintragen');}
+  if(dumbbell){set.weightPerDumbbell=parseNum($('#lWeightEach')?.value);set.dumbbellCount=Number($('#lDbCount')?.value)||1;if(set.weightPerDumbbell!=null)e.load=`${String(set.weightPerDumbbell).replace('.',',')} kg pro Hantel`;}
+  else{set.load=$('#lLoad')?.value.trim()||'';if(set.load)e.load=set.load;}
+  // XP belongs to the NEW saved set, not to reopening an old one.
+  // The flag is stored on the set itself so an existing set can never award XP twice.
+  set.xpAwarded=true;
+  if(state.activeWorkout&&state.activeWorkout.ids?.includes(id)){
+    const ent=workoutEntry(id);ent.sets.push(set);if(ent.completed)syncCompletedExerciseHistory(id);save();addXp(10,`Satz ${ent.sets.length} gespeichert!`);logExercise(id);return;
+  }
+  e.history=e.history||[];e.history.push({date:set.date,reps:set.reps||`L ${set.leftReps} / R ${set.rightReps}`,load:e.load,rpe:set.rpe,setXpAwarded:true});save();addXp(10,'Satz gespeichert!');logExercise(id);
+}
+window.deleteSessionSet=(id,index)=>{const ent=workoutEntry(id);if(!ent?.sets?.[index])return;ent.sets.splice(index,1);save();logExercise(id)}
+window.finishExercise=id=>{
+  const e=getExercise(id),ent=workoutEntry(id);if(!e||!ent)return;if(!ent.sets.length)return toast('Erst mindestens einen Satz speichern');
+  const firstCompletion=!ent.completed;ent.completed=true;state.activeWorkout.done[id]=true;
+  const prev=[...(e.history||[])];
+  const num=v=>parseNum(v);const setRepMax=st=>Math.max(0,...[st.reps,st.leftReps,st.rightReps].map(num).filter(Number.isFinite));
+  const repMax=Math.max(0,...ent.sets.map(setRepMax));const loadMax=Math.max(0,...ent.sets.map(st=>st.weightPerDumbbell??num(st.load)??0));
+  const oldLoads=prev.map(h=>num(h.weightPerDumbbell??h.load)).filter(Number.isFinite), oldReps=prev.map(h=>Math.max(0,...String(h.reps||'').split(/[^0-9.,]+/).map(num).filter(Number.isFinite))).filter(Number.isFinite);
+  const weightPR=loadMax>0&&(!oldLoads.length||loadMax>Math.max(...oldLoads));const repPR=repMax>0&&(!oldReps.length||repMax>Math.max(...oldReps));
+  if(firstCompletion){
+    const summary=ent.sets.map(st=>isUnilateralExercise(e)?`L${st.leftReps||'-'}/R${st.rightReps||'-'}`:(st.reps||'-')).join(', ');
+    const bestWeight=ent.sets.find(st=>st.weightPerDumbbell!=null)?.weightPerDumbbell;
+    e.history=e.history||[];e.history.push({date:new Date().toISOString(),sessionDate:localDateKey(),reps:summary,load:bestWeight!=null?`${bestWeight} kg pro Hantel`:e.load,weightPerDumbbell:bestWeight,sets:structuredClone(ent.sets)});
+    state.activityLog.push({date:localDateKey(),type:'exercise',label:e.name});
+  }
+  save();closeModal();
+  // Satz-XP wurden bereits beim Speichern jedes neuen Satzes vergeben.
+  // Beim Abschließen gibt es daher keine normalen XP noch einmal. Ein echter PR bleibt ein Bonus.
+  if(firstCompletion&&(weightPR||repPR))addXp(25,`🏆 Neuer ${weightPR?'Gewichts-':'Wiederholungs-'}PR!`);
+  else toast(ent.completed?'Übung gespeichert ✅':'Übung aktualisiert ✅');
+  if(currentView==='training'){state.activeWorkout?.mode==='custom'?renderCustomWorkout():showDailyTraining()}
+}
 window.completeWorkout=(mode='daily')=>{const ids=state.activeWorkout?.ids||[];const done=ids.filter(sessionDone).length;if(ids.length&&done<Math.ceil(ids.length/2)&&!confirm(`Erst ${done}/${ids.length} Übungen abgehakt. Training trotzdem abschließen?`))return;state.workouts++;state.activityLog.push({date:localDateKey(),type:'workout',label:state.activeWorkout?.title||'Training'});if(mode==='daily'){state.planRotation=((state.planRotation||0)+1)%dailyPlans.length;state.lastDailyCompletedDate=localDateKey()}state.activeWorkout=null;save();const gotQuest=completeQuest('train',250,'Daily Training geschafft!');if(!gotQuest){addXp(50,'Workout abgeschlossen!')}home()}
 function skillsView(filter='Alle'){const fams=['Alle',...new Set(skills.map(s=>s.family))];view.innerHTML=`<div class="sectiontitle"><h2>🗺️ Skill-Welt</h2><span class="tag yellow">RPG-Modus</span></div><div class="tabs">${fams.map(f=>`<button class="tab ${f===filter?'active':''}" onclick="skillsView('${f}')">${f}</button>`).join('')}</div><div class="skillmap">${skills.filter(s=>filter==='Alle'||s.family===filter).map(skillCard).join('')}</div>`}
 function skillCard(s){const p=state.skillProgress[s.id]??0,win=!!state.bossWins[s.id];return `<div class="skill ${win?'mastered':''}"><span class="badge">${win?'🏆':'⚔️'}</span><div class="muted">${s.family}</div><h3>${s.icon} ${s.name}</h3><div>${win?'Boss besiegt':`Stufe ${Math.min(p+1,s.steps.length)}/${s.steps.length}: ${s.steps[Math.min(p,s.steps.length-1)]}`}</div><div class="skillbar"><i style="width:${pct(p,s.steps.length)}%"></i></div><button class="btn secondary" style="margin-top:10px" onclick="openSkill('${s.id}')">${p?'Weitertrainieren':'Einstufen'}</button></div>`}
