@@ -109,6 +109,9 @@ function kcalEstimate(e,minutes,rpe='passend'){
 function stepKcal(steps){const kg=bodyWeight();if(!kg)return null;const stride=parseFloat(state.settings.strideM)||0.75;const km=Math.max(0,steps)*stride/1000;return Math.round(kg*km*0.5)}
 function todaySteps(){return Number(state.dailySteps[localDateKey()]?.steps||0)}
 function todayStepKcal(){return state.dailySteps[localDateKey()]?.kcal??stepKcal(todaySteps())}
+function exerciseCaloriesForDate(key=localDateKey()){return state.calorieLog.filter(x=>x.date===key&&x.type==='exercise').reduce((a,x)=>a+(Number(x.kcal)||0),0)}
+function totalCaloriesForDate(key=localDateKey()){const ex=exerciseCaloriesForDate(key);const step=state.dailySteps[key]?.kcal??stepKcal(Number(state.dailySteps[key]?.steps||0))??0;return ex+(Number(step)||0)}
+function calorieWeek(){const start=weekStart();return Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);const key=localDateKey(d);return {key,label:['Mo','Di','Mi','Do','Fr','Sa','So'][i],exercise:exerciseCaloriesForDate(key),steps:state.dailySteps[key]?.kcal??stepKcal(Number(state.dailySteps[key]?.steps||0))??0,total:totalCaloriesForDate(key)}})}
 function todayReadiness(){return state.dailyReadiness[localDateKey()]||null}
 function adaptiveExerciseCount(){const r=todayReadiness();if(!r)return 8;const t=Number(r.minutes||45);if(t<=20)return 4;if(t<=30)return 6;return 8}
 function currentDailyIds(){const p=currentDailyPlan();return p.blocks.flat().slice(0,adaptiveExerciseCount())}
@@ -143,6 +146,7 @@ function home(){
 <div class="sectiontitle"><h2>🎯 Heute</h2><span class="tag green">${plan.name}</span></div>
 <div class="card"><h3>Coach sagt</h3><p class="muted">Heute sind ${adaptiveExerciseCount()} Übungen vorgesehen. Muskelgruppen wechseln sich ab; bei nur 20–30 Minuten kürzt FitQuest die Einheit automatisch.</p><button class="btn block" onclick="go('training')">Daily Training öffnen</button></div>
 <div class="sectiontitle"><h2>👟 Schritte</h2><span class="muted">Erinnerung 22:00</span></div><div class="card stepcard"><div><div class="kpi smallkpi">${steps.toLocaleString('de-DE')}</div><div class="muted">Schritte heute${skcal!=null?` · ca. ${skcal} kcal*`:''}</div></div><button class="btn secondary" onclick="openSteps()">Eintragen</button><div class="tiny full">* sehr grobe Schätzung aus Schritten, Schrittlänge und Körpergewicht; kein Messwert.</div></div>
+<div class="sectiontitle"><h2>🔥 Kalorien heute</h2><span class="muted">Schätzung</span></div><div class="card kcalcard"><div class="kcalrow"><div><div class="kpi">≈ ${totalCaloriesForDate()} kcal</div><div class="muted">Training ≈ ${exerciseCaloriesForDate()} · Schritte ≈ ${todayStepKcal()||0}</div></div><button class="btn secondary" onclick="go('training');setTimeout(()=>showCalories(),0)">Rechner öffnen</button></div><div class="tiny">Aktivitätskalorien – keine Messung und nicht dein gesamter Tagesverbrauch.</div></div>
 <div class="sectiontitle"><h2>📜 Daily Quests</h2><span class="muted">Reset täglich 00:00</span></div>
 <div class="card">${quest('train','Training absolvieren',250)}${quest('skill','10 Min. Skilltraining',120)}${quest('challenge','Spider-Man-Challenge',300)}</div>
 <div class="sectiontitle"><h2>🔥 Wochenziel</h2><span class="muted">Regeneration zählt mit</span></div>${(()=>{const w=weeklyGoal();return `<div class="card"><div class="goalrow"><span>🏋️ Krafttraining</span><b>${Math.min(w.workouts,3)}/3</b></div><div class="bar mini"><i style="width:${Math.min(100,w.workouts/3*100)}%"></i></div><div class="goalrow"><span>🎯 Skill-Sessions</span><b>${Math.min(w.skills,2)}/2</b></div><div class="bar mini"><i style="width:${Math.min(100,w.skills/2*100)}%"></i></div><div class="tiny">Kein Tages-Streak: eine Pause oder Krankheit zerstört deine Serie nicht.</div></div>`})()}
@@ -275,7 +279,7 @@ function latestSessionSummary(id){
   return `${n} Satz${n===1?'':'e'} · ${reps}${wt?' · '+wt:''}`;
 }
 function training(){showDailyTraining()}
-function trainingTabs(active){return `<div class="tabs"><button class="tab ${active==='daily'?'active':''}" onclick="showDailyTraining()">Heute</button><button class="tab ${active==='custom'?'active':''}" onclick="showCustomBuilder()">Individuell</button><button class="tab ${active==='catalog'?'active':''}" onclick="showAllExercises()">Übungen</button><button class="tab ${active==='challenge'?'active':''}" onclick="challenge()">🕷️ Challenge</button></div>`}
+function trainingTabs(active){return `<div class="tabs"><button class="tab ${active==='daily'?'active':''}" onclick="showDailyTraining()">Heute</button><button class="tab ${active==='custom'?'active':''}" onclick="showCustomBuilder()">Individuell</button><button class="tab ${active==='catalog'?'active':''}" onclick="showAllExercises()">Übungen</button><button class="tab ${active==='calories'?'active':''}" onclick="showCalories()">🔥 Kalorien</button><button class="tab ${active==='challenge'?'active':''}" onclick="challenge()">🕷️ Challenge</button></div>`}
 function showDailyTraining(){
   const plan=currentDailyPlan(), ids=currentDailyIds();startSession('daily',ids,plan.name);
   const done=ids.filter(sessionDone).length;
@@ -327,13 +331,14 @@ window.logExercise=id=>{
   const e=getExercise(id);if(!e)return;
   const ent=(state.activeWorkout&&state.activeWorkout.ids?.includes(id))?workoutEntry(id):null;
   const sets=ent?.sets||[];const unilateral=isUnilateralExercise(e), dumbbell=isDumbbellExercise(e);
-  const setRows=sets.length?sets.map((x,i)=>`<div class="setrow"><b>Satz ${i+1}</b><span>${unilateral?`Links ${x.leftReps||'–'} · Rechts ${x.rightReps||'–'}`:`${x.reps||'–'} Wdh./Sek.`}</span><small>${x.weightPerDumbbell?`${formatKg(x.weightPerDumbbell)} je Hantel · ${x.dumbbellCount||1} Hantel${(x.dumbbellCount||1)>1?'n':''} · ${formatKg(x.weightPerDumbbell*(x.dumbbellCount||1))} gesamt`:x.load||'Körpergewicht'}${x.rpe?' · '+x.rpe:''}</small><button class="iconbtn" onclick="deleteSessionSet('${id}',${i})">✕</button></div>`).join(''):'<div class="empty small">Noch kein Satz gespeichert.</div>';
+  const setRows=sets.length?sets.map((x,i)=>`<div class="setrow"><b>Satz ${i+1}</b><span>${unilateral?`Links ${x.leftReps||'–'} · Rechts ${x.rightReps||'–'}`:`${x.reps||'–'} Wdh./Sek.`}</span><small>${x.weightPerDumbbell?`${formatKg(x.weightPerDumbbell)} je Hantel · ${x.dumbbellCount||1} Hantel${(x.dumbbellCount||1)>1?'n':''} · ${formatKg(x.weightPerDumbbell*(x.dumbbellCount||1))} gesamt`:x.load||'Körpergewicht'}${x.rpe?' · '+x.rpe:''}${x.minutes?` · ${x.minutes} Min.`:''}${x.kcal!=null?` · 🔥 ≈ ${x.kcal} kcal`:''}</small><button class="iconbtn" onclick="deleteSessionSet('${id}',${i})">✕</button></div>`).join(''):'<div class="empty small">Noch kein Satz gespeichert.</div>';
   modal(`<h2>${e.name}</h2>${exerciseIllustration(e,'large')}<div class="tiny visualhint">Jeden neuen Satz direkt speichern: Er bleibt erhalten und bringt einmal XP. Beim erneuten Öffnen werden alte Sätze nur angezeigt – ohne doppelte XP.</div>
   ${ent?`<div class="sessionlog"><div class="sectiontitle mini"><h3>Heutige Sätze</h3><span class="tag green">${sets.length}</span></div>${setRows}</div>`:''}
   <div class="formgrid">
   ${dumbbell?`<div class="field"><label>Gewicht pro Hantel (kg)</label><input id="lWeightEach" inputmode="decimal" value="${sets.at(-1)?.weightPerDumbbell??parseNum(e.load)??''}" placeholder="z. B. 20"><div class="tiny">Immer das Gewicht EINER Kurzhantel eintragen.</div></div><div class="field"><label>Wie viele Hanteln nutzt du?</label><select id="lDbCount"><option value="1" ${(sets.at(-1)?.dumbbellCount??defaultDumbbellCount(e))===1?'selected':''}>1 Hantel</option><option value="2" ${(sets.at(-1)?.dumbbellCount??defaultDumbbellCount(e))===2?'selected':''}>2 Hanteln</option></select></div>`:`<div class="field"><label>Gewicht / Band</label><input id="lLoad" value="${sets.at(-1)?.load??e.load??''}" placeholder="z. B. lila Band"></div>`}
   ${unilateral?`<div class="sidegrid"><div class="field"><label>Links – Wdh. / Sek.</label><input id="lLeft" inputmode="decimal" placeholder="z. B. 10"></div><div class="field"><label>Rechts – Wdh. / Sek.</label><input id="lRight" inputmode="decimal" placeholder="z. B. 10"></div></div>`:`<div class="field"><label>Wiederholungen / Sekunden dieses Satzes</label><input id="lReps" inputmode="decimal" placeholder="z. B. 12"></div>`}
   <div class="field"><label>Wie schwer war der Satz?</label><select id="lRpe"><option>leicht</option><option selected>passend</option><option>schwer</option><option>sehr schwer</option></select></div>
+  <div class="field"><label>Zeit für diesen Satz inkl. direkter Belastungsphase (Min.)</label><input id="lMinutes" inputmode="decimal" value="1" placeholder="z. B. 1,5"><div class="tiny">Für eine sinnvollere Kalorienschätzung. Pausen zwischen Übungen nicht doppelt eintragen.</div></div>
   <button class="btn block" onclick="saveSessionSet('${id}')">💾 Satz sofort speichern</button>
   ${ent?`<button class="btn secondary block" onclick="finishExercise('${id}')">${ent.completed?'✅ Übung abgeschlossen – weitere Sätze trotzdem möglich':'✅ Übung für heute abschließen'}</button>`:''}
   <div class="tiny">${dumbbell?'Beispiel: 20 kg pro Hantel × 2 = 40 kg Gesamtlast.':''} Kalorien bleiben eine Schätzung aus Körpergewicht, Übungstyp und Zeit/Intensität.</div>
@@ -341,7 +346,7 @@ window.logExercise=id=>{
 }
 window.saveSessionSet=id=>{
   const e=getExercise(id);if(!e)return;const unilateral=isUnilateralExercise(e),dumbbell=isDumbbellExercise(e);
-  const set={date:new Date().toISOString(),rpe:$('#lRpe')?.value||'passend'};
+  const set={id:'set_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),date:new Date().toISOString(),rpe:$('#lRpe')?.value||'passend'};set.minutes=Math.max(0,parseFloat(String($('#lMinutes')?.value||'1').replace(',','.'))||1);set.kcal=kcalEstimate(e,set.minutes,set.rpe);
   if(unilateral){set.leftReps=$('#lLeft')?.value.trim()||'';set.rightReps=$('#lRight')?.value.trim()||'';if(!set.leftReps&&!set.rightReps)return toast('Links oder rechts Wiederholungen eintragen');}
   else{set.reps=$('#lReps')?.value.trim()||'';if(!set.reps)return toast('Wiederholungen oder Sekunden eintragen');}
   if(dumbbell){set.weightPerDumbbell=parseNum($('#lWeightEach')?.value);set.dumbbellCount=Number($('#lDbCount')?.value)||1;if(set.weightPerDumbbell!=null)e.load=`${String(set.weightPerDumbbell).replace('.',',')} kg pro Hantel`;}
@@ -349,12 +354,13 @@ window.saveSessionSet=id=>{
   // XP belongs to the NEW saved set, not to reopening an old one.
   // The flag is stored on the set itself so an existing set can never award XP twice.
   set.xpAwarded=true;
+  if(set.kcal!=null)state.calorieLog.push({date:localDateKey(),type:'exercise',sourceId:set.id,exerciseId:id,label:e.name,kcal:set.kcal,minutes:set.minutes,rpe:set.rpe});
   if(state.activeWorkout&&state.activeWorkout.ids?.includes(id)){
     const ent=workoutEntry(id);ent.sets.push(set);if(ent.completed)syncCompletedExerciseHistory(id);save();addXp(10,`Satz ${ent.sets.length} gespeichert!`);logExercise(id);return;
   }
   e.history=e.history||[];e.history.push({date:set.date,reps:set.reps||`L ${set.leftReps} / R ${set.rightReps}`,load:e.load,rpe:set.rpe,setXpAwarded:true});save();addXp(10,'Satz gespeichert!');logExercise(id);
 }
-window.deleteSessionSet=(id,index)=>{const ent=workoutEntry(id);if(!ent?.sets?.[index])return;ent.sets.splice(index,1);save();logExercise(id)}
+window.deleteSessionSet=(id,index)=>{const ent=workoutEntry(id);if(!ent?.sets?.[index])return;const removed=ent.sets[index];if(removed?.id)state.calorieLog=state.calorieLog.filter(x=>x.sourceId!==removed.id);ent.sets.splice(index,1);save();logExercise(id)}
 window.finishExercise=id=>{
   const e=getExercise(id),ent=workoutEntry(id);if(!e||!ent)return;if(!ent.sets.length)return toast('Erst mindestens einen Satz speichern');
   const firstCompletion=!ent.completed;ent.completed=true;state.activeWorkout.done[id]=true;
@@ -377,6 +383,29 @@ window.finishExercise=id=>{
   if(currentView==='training'){state.activeWorkout?.mode==='custom'?renderCustomWorkout():showDailyTraining()}
 }
 window.completeWorkout=(mode='daily')=>{const ids=state.activeWorkout?.ids||[];const done=ids.filter(sessionDone).length;if(ids.length&&done<Math.ceil(ids.length/2)&&!confirm(`Erst ${done}/${ids.length} Übungen abgehakt. Training trotzdem abschließen?`))return;state.workouts++;state.activityLog.push({date:localDateKey(),type:'workout',label:state.activeWorkout?.title||'Training'});if(mode==='daily'){state.planRotation=((state.planRotation||0)+1)%dailyPlans.length;state.lastDailyCompletedDate=localDateKey()}state.activeWorkout=null;save();const gotQuest=completeQuest('train',250,'Daily Training geschafft!');if(!gotQuest){addXp(50,'Workout abgeschlossen!')}home()}
+function showCalories(){
+  ensureDailyReset();
+  const kg=bodyWeight(), exK=exerciseCaloriesForDate(), stepK=todayStepKcal()||0, total=exK+stepK, week=calorieWeek();
+  const logs=state.calorieLog.filter(x=>x.date===localDateKey()&&x.type==='exercise');
+  view.innerHTML=`${trainingTabs('calories')}
+  <div class="sectiontitle"><h2>🔥 Kalorien</h2><span class="tag yellow">geschätzt</span></div>
+  <div class="hero kcalhero"><div class="muted">AKTIVITÄT HEUTE</div><div class="kpi">≈ ${total} kcal</div><div class="kcalbreak"><span>🏋️ Training <b>≈ ${exK}</b></span><span>👟 Schritte <b>≈ ${stepK}</b></span></div><div class="tiny">Nicht enthalten: Grundumsatz und sonstiger Tagesverbrauch.</div></div>
+  ${!kg?`<div class="notice">Für Kalorienschätzungen fehlt dein Körpergewicht. <button class="btn small" onclick="settings()">Jetzt eintragen</button></div>`:''}
+  <div class="sectiontitle"><h2>🧮 Rechner</h2><span class="muted">zum Ausprobieren</span></div>
+  <div class="card formgrid">
+    <div class="field"><label>Übung</label><select id="calExercise">${state.exercises.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+    <div class="grid calcgrid"><div class="field"><label>Dauer (Min.)</label><input id="calMinutes" inputmode="decimal" value="10"></div><div class="field"><label>Intensität</label><select id="calRpe"><option>leicht</option><option selected>passend</option><option>schwer</option><option>sehr schwer</option></select></div></div>
+    <button class="btn block" onclick="calcCaloriesPreview()">Berechnen</button>
+    <div id="calPreview" class="calcresult">${kg?'Werte eingeben und berechnen.':'Zuerst Körpergewicht in ⚙️ Einstellungen eintragen.'}</div>
+    <div class="tiny">Die Last in kg fließt nicht linear in kcal ein. Für Krafttraining bestimmen vor allem Körpergewicht, Übungsart, Dauer und Intensität die grobe Schätzung.</div>
+  </div>
+  <div class="sectiontitle"><h2>🏋️ Heute nach Übungen</h2><span class="muted">gespeicherte Sätze</span></div>
+  ${logs.length?`<div class="card kcal-list">${logs.map(x=>`<div class="kcalitem"><div><b>${x.label}</b><small>${x.minutes||'–'} Min. · ${x.rpe||'–'}</small></div><strong>≈ ${x.kcal} kcal</strong></div>`).join('')}</div>`:'<div class="empty">Heute noch keine Sätze mit Kalorienschätzung gespeichert.</div>'}
+  <div class="sectiontitle"><h2>📅 Wochenübersicht</h2></div><div class="card kcalweek">${week.map(d=>`<div class="kcalday ${d.key===localDateKey()?'today':''}"><b>${d.label}</b><span>≈ ${d.total} kcal</span><small>🏋️ ${d.exercise} · 👟 ${d.steps}</small></div>`).join('')}</div>
+  <div class="notice">Kalorien sind Modellschätzungen, keine Messwerte. Sie eignen sich eher für Trends als für exaktes "Zurückessen" verbrauchter Kalorien.</div>`;
+}
+window.showCalories=showCalories;
+window.calcCaloriesPreview=()=>{const e=getExercise($('#calExercise')?.value),m=$('#calMinutes')?.value,r=$('#calRpe')?.value||'passend',out=$('#calPreview');if(!bodyWeight()){out.innerHTML='⚠️ Bitte zuerst Körpergewicht in den Einstellungen eintragen.';return;}const k=kcalEstimate(e,m,r);out.innerHTML=k==null?'Bitte gültige Dauer eingeben.':`<b>≈ ${k} kcal</b><span>${e.name} · ${m} Min. · ${r}</span><small>MET ≈ ${exerciseMET(e,r).toFixed(1)}</small>`};
 function skillsView(filter='Alle'){const fams=['Alle',...new Set(skills.map(s=>s.family))];view.innerHTML=`<div class="sectiontitle"><h2>🗺️ Skill-Welt</h2><span class="tag yellow">RPG-Modus</span></div><div class="tabs">${fams.map(f=>`<button class="tab ${f===filter?'active':''}" onclick="skillsView('${f}')">${f}</button>`).join('')}</div><div class="skillmap">${skills.filter(s=>filter==='Alle'||s.family===filter).map(skillCard).join('')}</div>`}
 function skillCard(s){const p=state.skillProgress[s.id]??0,win=!!state.bossWins[s.id];return `<div class="skill ${win?'mastered':''}"><span class="badge">${win?'🏆':'⚔️'}</span><div class="muted">${s.family}</div><h3>${s.icon} ${s.name}</h3><div>${win?'Boss besiegt':`Stufe ${Math.min(p+1,s.steps.length)}/${s.steps.length}: ${s.steps[Math.min(p,s.steps.length-1)]}`}</div><div class="skillbar"><i style="width:${pct(p,s.steps.length)}%"></i></div><button class="btn secondary" style="margin-top:10px" onclick="openSkill('${s.id}')">${p?'Weitertrainieren':'Einstufen'}</button></div>`}
 window.skillsView=skillsView;
