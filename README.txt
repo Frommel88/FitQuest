@@ -1,4 +1,4 @@
-FitQuest V0.3 COMPLETE
+FitQuest V0.4 COMPLETE
 ======================
 Alle Dateien direkt ins Hauptverzeichnis des GitHub-Pages-Repositories hochladen.
 
@@ -12,3 +12,5 @@ Neu in dieser V0.3:
 - vorhandene lokale FitQuest-Daten werden weiterverwendet
 
 Hinweis: Video-Buttons oeffnen gezielte YouTube-Suchen bzw. fachliche Skill-Seiten. So bleibt die Hilfe funktionsfaehig, auch wenn einzelne YouTube-Videos geloescht werden.
+
+V0.4.1: Integrierte schematische Start-/Ziel-Abbildungen für jede Übung und Skill-Vorübung; eigene Bild/GIF-URL bei selbst angelegten Übungen möglich.
