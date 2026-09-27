@@ -1,26 +1,18 @@
-FITQUEST V0.1
-==============
+FITQUEST V0.2
+=============
 
-Enthalten:
-- PWA mit App-Icon und Offline-Cache
-- Heute-Dashboard, XP und Level
-- Daily Quests
-- Trainingsansicht mit den gelb markierten Übungen aus dem Excel-Blatt "Nils"
-- Vollständiger Übungskatalog aus dem Blatt "Nils"
-- Eigene Übungen anlegen
-- Gewicht/Band, Wiederholungen und Belastung protokollieren
-- Equipment-Auswahl
-- Calisthenics-Skilltree mit 18 Hauptskills und je 6 Progressionsstufen
-- Bossfights, XP und Hall of Fame
-- Spider-Man-Challenge mit 20-Minuten-Timer und Rundenzähler
-- Körperfoto-Modul für entspannt/angespannt
-- Lokale Datenspeicherung per localStorage
+Neu:
+- Daily Quests werden jeden Kalendertag automatisch zurueckgesetzt.
+- Wenn die App ueber Mitternacht offen bleibt, erfolgt der Reset automatisch.
+- Daily Training: maximal 8 Uebungen, kompakt auf einen Blick.
+- 4 Wechselbloecke mit unterschiedlichen Muskelgruppen fuer kompakte Einheiten.
+- 3 rotierende Ganzkoerperplaene A/B/C auf Basis des Uebungskatalogs.
+- Individuelles Training: bis zu 8 Uebungen frei waehlen.
+- Individuelle Auswahl kann nach Muskelgruppen automatisch abwechselnd sortiert werden.
+- Uebungskatalog nach Muskelgruppen einklappbar.
+- Eingetragene Uebungen werden im aktuellen Workout gruen abgehakt.
+- Bestehende lokale Daten aus V0.1 werden weiterverwendet.
+- Service Worker Cache auf V0.2 aktualisiert.
 
-Noch nicht echt angebunden:
-- KI-Auswertung der Körperfotos (Backend/API erforderlich)
-- automatische Video-Technikanalyse
-- zuverlässige zeitgesteuerte Push-Erinnerungen außerhalb einer geöffneten Browser/PWA-Sitzung
-- Cloud-Synchronisation
-
-Installation:
-Die Dateien müssen über HTTPS oder localhost ausgeliefert werden. index.html direkt als file:// zu öffnen reicht für Service Worker/PWA-Installation nicht.
+GitHub Pages Update:
+Alle 8 Dateien liegen weiterhin direkt im Hauptverzeichnis. Beim Upload auf GitHub die bestehenden Dateien ersetzen.
