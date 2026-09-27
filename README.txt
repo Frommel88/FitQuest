@@ -11,3 +11,6 @@ Neu:
 - Kalorien sind Aktivitäts-Schätzungen, keine Messwerte
 
 Upload auf GitHub Pages: alle 8 Dateien direkt ins Repository-Hauptverzeichnis laden und vorhandene Dateien ersetzen.
+
+
+V0.5: Sportabzeichen 2026 (M 35-39 initial), Übungsfinder Top 5, Knowledge Quests.

@@ -45,12 +45,45 @@ const skillPlans = {
 };
 function planForSkill(skill){return skillPlans[skill.name]||{source:'https://www.youtube.com/results?search_query='+encodeURIComponent(skill.name+' calisthenics progression tutorial'),visual:skill.icon,intro:'Schrittweise Progression mit sauberer Technik.',gate:'Aktuelle Stufe sauber und reproduzierbar',drills:skill.steps.slice(0,3).map(x=>({name:x,dose:'3–4 saubere Sätze',cue:'Kontrolliert und ohne Schwung.',error:'Technikverlust oder Schmerzen.',video:'https://www.youtube.com/results?search_query='+encodeURIComponent(x+' calisthenics tutorial')}))}}
 
+const exerciseLibrary=[
+['Brust','Kurzhantel','Kurzhantel-Bankdrücken','hypertrophy'],['Brust','Kurzhantel','Kurzhantel-Schrägbankdrücken','hypertrophy'],['Brust','Kurzhantel','Kurzhantel-Flyes','hypertrophy'],['Brust','Kurzhantel','Kurzhantel-Squeeze-Press','hypertrophy'],['Brust','Kurzhantel','Kurzhantel-Floor-Press','strength'],
+['Brust','Körpergewicht','Liegestütze','hypertrophy'],['Brust','Körpergewicht','Deficit-Liegestütze','hypertrophy'],['Brust','Körpergewicht','Dips','hypertrophy'],['Brust','Körpergewicht','Archer Push-ups','strength'],['Brust','Körpergewicht','Decline Push-ups','hypertrophy'],
+['Brust','Langhantel','Bankdrücken','strength'],['Brust','Langhantel','Schrägbankdrücken','hypertrophy'],['Brust','Langhantel','Floor Press','strength'],['Brust','Langhantel','Enges Bankdrücken','strength'],['Brust','Langhantel','Guillotine-freies breites Bankdrücken','hypertrophy'],
+['Rücken','Klimmzugstange','Klimmzüge','strength'],['Rücken','Klimmzugstange','Chin-ups','strength'],['Rücken','Klimmzugstange','Scapular Pull-ups','control'],['Rücken','Klimmzugstange','Chest-to-Bar Pull-ups','strength'],['Rücken','Klimmzugstange','Negative Klimmzüge','strength'],
+['Rücken','Kurzhantel','Einarmiges Kurzhantelrudern','hypertrophy'],['Rücken','Kurzhantel','Chest-Supported Row','hypertrophy'],['Rücken','Kurzhantel','Kurzhantel-Pullover','hypertrophy'],['Rücken','Kurzhantel','Reverse Fly','hypertrophy'],['Rücken','Kurzhantel','Renegade Row','strength'],
+['Rücken','Langhantel','Langhantelrudern','strength'],['Rücken','Langhantel','Pendlay Row','strength'],['Rücken','Langhantel','Kreuzheben','strength'],['Rücken','Langhantel','Meadows-ähnliches einarmiges Rudern','hypertrophy'],['Rücken','Langhantel','Rack Pull','strength'],
+['Beine','Kurzhantel','Bulgarian Split Squat','hypertrophy'],['Beine','Kurzhantel','Goblet Squat','hypertrophy'],['Beine','Kurzhantel','Rumänisches Kreuzheben','hypertrophy'],['Beine','Kurzhantel','Ausfallschritte','hypertrophy'],['Beine','Kurzhantel','Step-ups','hypertrophy'],
+['Beine','Körpergewicht','Pistol-Squat-Progression','strength'],['Beine','Körpergewicht','Bulgarian Split Squat','hypertrophy'],['Beine','Körpergewicht','Reverse Lunges','hypertrophy'],['Beine','Körpergewicht','Nordic-Curl-Progression','strength'],['Beine','Körpergewicht','Einbeiniges Wadenheben','hypertrophy'],
+['Beine','Langhantel','Kniebeuge','strength'],['Beine','Langhantel','Front Squat','strength'],['Beine','Langhantel','Rumänisches Kreuzheben','hypertrophy'],['Beine','Langhantel','Hip Thrust','hypertrophy'],['Beine','Langhantel','Ausfallschritte','hypertrophy'],
+['Schultern','Kurzhantel','Schulterdrücken','hypertrophy'],['Schultern','Kurzhantel','Seitheben','hypertrophy'],['Schultern','Kurzhantel','Reverse Fly','hypertrophy'],['Schultern','Kurzhantel','Arnold Press','hypertrophy'],['Schultern','Kurzhantel','Lean-away Seitheben','hypertrophy'],
+['Bizeps','Kurzhantel','Schrägbank-Curl','hypertrophy'],['Bizeps','Kurzhantel','Hammer Curl','hypertrophy'],['Bizeps','Kurzhantel','Supinierter Curl','hypertrophy'],['Bizeps','Kurzhantel','Concentration Curl','hypertrophy'],['Bizeps','Kurzhantel','Spider Curl','hypertrophy'],
+['Trizeps','Kurzhantel','Überkopf-Trizepsstrecken','hypertrophy'],['Trizeps','Kurzhantel','Skull Crusher','hypertrophy'],['Trizeps','Kurzhantel','Tate Press','hypertrophy'],['Trizeps','Kurzhantel','Kickback','hypertrophy'],['Trizeps','Kurzhantel','Enger Floor Press','strength'],
+['Bauch/Core','Körpergewicht','Hanging Leg Raise','strength'],['Bauch/Core','Körpergewicht','Ab-Wheel/Rollout-Progression','strength'],['Bauch/Core','Körpergewicht','Reverse Crunch','hypertrophy'],['Bauch/Core','Körpergewicht','Side Plank','control'],['Bauch/Core','Körpergewicht','Dead Bug','control']
+].map((x,i)=>({id:'lib'+i,group:x[0],equipment:x[1],name:x[2],goal:x[3]}));
+const knowledgeQuestions=[
+{tags:['Klimmzüge','Rücken'],q:'Was ist beim kontrollierten Klimmzug ein typischer Technikfehler?',a:['Schwung aus Hüfte und Beinen','Schulterblätter aktivieren','Kontrolliert ablassen','Kinn über die Stange bringen'],ok:0,why:'Unkontrollierter Schwung ersetzt einen Teil der Zugleistung und erschwert reproduzierbare Technik.'},
+{tags:['Brust','Liegestütze'],q:'Welche Position sollte bei einem sauberen Liegestütz möglichst erhalten bleiben?',a:['Körper als stabile Linie','Hüfte deutlich durchhängen lassen','Kopf maximal anheben','Nur die Schulter bewegen'],ok:0,why:'Eine stabile Rumpfposition hilft, die Bewegung kontrolliert auszuführen.'},
+{tags:['Beine','Bulgarian Split Squat'],q:'Was ist beim Bulgarian Split Squat besonders wichtig?',a:['Vorderen Fuß stabil belasten und Knie kontrollieren','Mit Schwung aus dem hinteren Bein abspringen','Nur wenige Zentimeter bewegen','Oberkörper immer maximal zurücklehnen'],ok:0,why:'Der vordere Fuß und eine kontrollierte Kniebahn schaffen eine stabile, reproduzierbare Bewegung.'},
+{tags:['Bauch/Core','Crunches'],q:'Was sollte bei Crunches vermieden werden?',a:['Am Kopf/Nacken ziehen','Bauchspannung aufbauen','Kontrolliert bewegen','Ausatmen während der Anstrengung'],ok:0,why:'Ziehen am Kopf/Nacken verbessert den Trainingsreiz nicht und kann unnötig belasten.'},
+{tags:['all'],q:'Was bedeutet RIR 2?',a:['Etwa zwei saubere Wiederholungen wären noch möglich','Zwei Minuten Pause','Zwei Wiederholungen insgesamt','Zwei Aufwärmsätze'],ok:0,why:'RIR bedeutet Reps in Reserve – geschätzte noch mögliche saubere Wiederholungen.'},
+{tags:['all'],q:'Welche Aussage beschreibt progressive Überlastung am besten?',a:['Trainingsreiz über Zeit sinnvoll steigern','Jeden Satz bis zum völligen Versagen','Jeden Tag dieselbe Last nutzen','Pausen komplett vermeiden'],ok:0,why:'Progression kann z. B. über Wiederholungen, Last, Bewegungsqualität oder anspruchsvollere Varianten erfolgen.'},
+{tags:['all'],q:'Warum sind Pausen zwischen schweren Sätzen sinnvoll?',a:['Sie erlauben teilweise Erholung für den nächsten Qualitätssatz','Sie verhindern Muskelwachstum','Sie machen das Gewicht leichter','Sie ersetzen Aufwärmen'],ok:0,why:'Ausreichende Satzpausen helfen, Leistung und Technik in Folgesätzen aufrechtzuerhalten.'}
+];
+function quizForExercise(e){let pool=knowledgeQuestions.filter(q=>q.tags.includes('all')||q.tags.some(t=>e.name.includes(t)||e.group.includes(t)));pool.sort((a,b)=>(state.knowledge.answered[a.q]||0)-(state.knowledge.answered[b.q]||0));return pool[0]||knowledgeQuestions[0]}
+window.showKnowledgeQuiz=id=>{const e=getExercise(id),q=quizForExercise(e);modal(`<div class="celebrate">🧠</div><h2>Knowledge Quest</h2><p><b>${q.q}</b></p><div class="quizanswers">${q.a.map((a,i)=>`<button class="btn secondary block" onclick="answerKnowledge('${id}',${knowledgeQuestions.indexOf(q)},${i})">${String.fromCharCode(65+i)} · ${a}</button>`).join('')}</div>`)};
+window.answerKnowledge=(id,qi,ans)=>{const q=knowledgeQuestions[qi],right=ans===q.ok;state.knowledge.answered[q.q]=(state.knowledge.answered[q.q]||0)+1;if(right){state.knowledge.xp+=5;save();addXp(5,'🧠 Knowledge Quest richtig!')}else save();modal(`<div class="celebrate">${right?'🧠✨':'📚'}</div><h2>${right?'Richtig! +5 XP':'Nicht ganz'}</h2><p>${q.why}</p><div class="notice">Richtige Antwort: <b>${q.a[q.ok]}</b></div><button class="btn block" onclick="closeModal()">Weiter</button>`)};
+const sportBadge35M={
+ endurance:[['3.000 m Lauf','19:50','17:20','15:00'],['10 km Lauf','74:10','65:30','56:50'],['20 km Radfahren','58:00','50:00','41:30']],
+ strength:[['Klimmzüge','4','10','14'],['Liegestütze','19','29','42'],['Crunches','32','43','57'],['Triceps-Dips','25','35','46'],['Standweitsprung','1,65 m','1,95 m','2,25 m']],
+ speed:[['100 m Lauf','17,6 s','15,9 s','14,2 s'],['25 m Schwimmen','35,0 s','26,5 s','18,5 s'],['200 m Radfahren','24,0 s','20,0 s','15,5 s']],
+ coordination:[['Hochsprung','1,25 m','1,35 m','1,45 m'],['Weitsprung','4,10 m','4,40 m','4,70 m'],['Ball umgreifen','36','44','53'],['Kick-Fangen','13','17','20'],['Koordinations-T-Lauf','14,1 s','12,6 s','11,1 s']]
+};
 const dailyPlans = [
   {name:'Ganzkörper A',focus:'Zug · Beine · Druck · Rücken · Schulter · Core · Arme',blocks:[['e3','e18'],['e5','e4'],['e11','e8'],['e25','e31']]},
   {name:'Ganzkörper B',focus:'Hintere Kette · Brust · Rücken · Gesäß · Schulter · Core · Unterarme',blocks:[['e17','e7'],['e0','e21'],['e12','e10'],['e27','e29']]},
   {name:'Ganzkörper C',focus:'Beine · obere Brust · Rücken · Gesäß · Schulter · Core · Arme',blocks:[['e18','e6'],['e4','e23'],['e13','e9'],['e24','e31']]}
 ];
-const defaults={xp:280,level:3,streak:0,exercises:baseExercises,skillProgress:{},equipment:{pullup:true,bench:true,dumbbell:true,bands:true,rack:false,barbell:false,rings:false,dips:false},quests:{date:'',train:false,skill:false,challenge:false},records:{spiderman:0},workouts:0,bodyChecks:[],settings:{gameMode:true,coachTone:'motivierend',reminders:false,bodyWeightKg:'',bodyHeightCm:'',age:'',sex:'',strideM:0.75},planRotation:0,lastDailyCompletedDate:'',customSelection:[],activeWorkout:null,skillGoals:{},skillSessions:{},skillEvidence:{},bossWins:{},dailySteps:{},dailyReadiness:{},activityLog:[],calorieLog:[],bonusQuest:{date:'',done:false}};
+const defaults={xp:280,level:3,streak:0,exercises:baseExercises,skillProgress:{},equipment:{pullup:true,bench:true,dumbbell:true,bands:true,rack:false,barbell:false,rings:false,dips:false},quests:{date:'',train:false,skill:false,challenge:false},records:{spiderman:0},workouts:0,bodyChecks:[],settings:{gameMode:true,coachTone:'motivierend',reminders:false,bodyWeightKg:'',bodyHeightCm:'',age:'',sex:'',strideM:0.75},planRotation:0,lastDailyCompletedDate:'',customSelection:[],activeWorkout:null,skillGoals:{},skillSessions:{},skillEvidence:{},bossWins:{},dailySteps:{},dailyReadiness:{},activityLog:[],calorieLog:[],bonusQuest:{date:'',done:false},workoutHistory:[],knowledge:{answered:{},xp:0},sportBadge:{results:{},goal:'Gold'}};
 function localDateKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function load(){
   try{
@@ -67,7 +100,8 @@ function load(){
     s.dailyReadiness={...defaults.dailyReadiness,...raw.dailyReadiness};
     if(!Array.isArray(s.activityLog))s.activityLog=[];
     if(!Array.isArray(s.calorieLog))s.calorieLog=[];
-    s.bonusQuest={...defaults.bonusQuest,...raw.bonusQuest};
+    if(!Array.isArray(s.workoutHistory))s.workoutHistory=[];
+    s.bonusQuest={...defaults.bonusQuest,...raw.bonusQuest}; s.knowledge={...defaults.knowledge,...raw.knowledge,answered:{...defaults.knowledge.answered,...raw.knowledge?.answered}}; s.sportBadge={...defaults.sportBadge,...raw.sportBadge,results:{...defaults.sportBadge.results,...raw.sportBadge?.results}};
     if(!Array.isArray(s.exercises)||!s.exercises.length)s.exercises=structuredClone(baseExercises);
     if(!Array.isArray(s.customSelection))s.customSelection=[];
     return s;
@@ -94,17 +128,43 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.remove('hi
 function levelFromXp(){state.level=Math.floor(state.xp/500)+1;return state.level}
 function addXp(n,msg){state.xp+=n;levelFromXp();save();toast(`${msg||'Stark!'} +${n} XP ⚡`)}
 function bodyWeight(){const n=parseFloat(String(state.settings.bodyWeightKg||'').replace(',','.'));return Number.isFinite(n)&&n>0?n:null}
-function exerciseMET(e,rpe='passend'){
-  const bw=(e.equipment||'').toLowerCase().includes('körpergewicht');
-  let met=bw?3.0:3.5;
-  if((e.name||'').toLowerCase().includes('klimm')||(e.name||'').toLowerCase().includes('handstand'))met=4.0;
-  const factor={leicht:0.8,passend:1,schwer:1.25,'sehr schwer':1.45}[rpe]||1;
-  return Math.min(6.5,Math.max(2.5,met*factor));
+function exerciseBaseMET(e){
+  const n=((e?.name||'')+' '+(e?.group||'')+' '+(e?.equipment||'')).toLowerCase();
+  // 2024 Adult Compendium-inspired classes: light abs 2.8; general resistance 3.5;
+  // squat/deadlift patterns 5.0; vigorous resistance 6.0; vigorous calisthenics 7.5.
+  if(/crunch|sit-up|sit up|plank/.test(n))return 2.8;
+  if(/bulgarian|split squat|kniebeug|squat|kreuzheben|deadlift|hip thrust|ausfallschritt|lunge/.test(n))return 5.0;
+  if(/klimm|pull-up|pull up|muscle-up|muscle up|burpee|handstand push|hspu/.test(n))return 6.0;
+  if(/bankdrück|schrägbank|shoulder|schulterdrück|rudern|row|dip|liegestütz|push-up|push up/.test(n))return 4.5;
+  if(/seitheben|frontheben|curl|trizeps|reverse|face pull|wadenheben|handquetscher/.test(n))return 3.5;
+  if(/körpergewicht/.test(n))return 3.8;
+  return 3.5;
 }
-function kcalEstimate(e,minutes,rpe='passend'){
-  const kg=bodyWeight();if(!kg)return null;
-  const min=Math.max(0,parseFloat(String(minutes).replace(',','.'))||0);if(!min)return null;
-  return Math.round(exerciseMET(e,rpe)*3.5*kg/200*min);
+function correctedMetFactor(){
+  const kg=bodyWeight(), h=parseNum(state.settings.bodyHeightCm), age=parseNum(state.settings.age), sex=state.settings.sex;
+  if(!kg||!h||!age||!sex)return 1;
+  let rmr;
+  if(sex==='m'||/mann|male|männ/i.test(sex))rmr=66.473+5.0033*h+13.7516*kg-6.755*age;
+  else if(sex==='w'||/frau|female|weib/i.test(sex))rmr=655.0955+1.8496*h+9.5634*kg-4.6756*age;
+  else return 1;
+  const predictedVo2=(rmr/1440/5)/kg*1000;
+  if(!Number.isFinite(predictedVo2)||predictedVo2<=0)return 1;
+  return Math.min(1.25,Math.max(.8,3.5/predictedVo2));
+}
+function exerciseMET(e,rpe='passend'){
+  const factor={leicht:.82,passend:1,schwer:1.15,'sehr schwer':1.28}[rpe]||1;
+  return Math.min(8.0,Math.max(2.0,exerciseBaseMET(e)*factor*correctedMetFactor()));
+}
+function kcalForMet(met,minutes){const kg=bodyWeight();if(!kg)return null;return met*3.5*kg/200*Math.max(0,minutes||0)}
+function kcalEstimate(e,minutes,rpe='passend'){const v=kcalForMet(exerciseMET(e,rpe),parseNum(minutes));return v==null?null:Math.round(v)}
+function entryActiveMinutes(e,ent){return (ent?.sets||[]).reduce((a,st)=>a+(Number(st.minutes)||autoSetMinutes(e,st)),0)}
+function entryElapsedMinutes(ent){if(!ent?.startedAt)return 0;const end=ent.finishedAt?new Date(ent.finishedAt).getTime():Date.now();return Math.max(0,(end-new Date(ent.startedAt).getTime())/60000)}
+function entryKcal(e,ent){
+  if(!bodyWeight()||!ent?.sets?.length)return 0;
+  if(ent.finalKcal!=null)return ent.finalKcal;
+  const active=entryActiveMinutes(e,ent), elapsed=Math.max(active,entryElapsedMinutes(ent));
+  const rest=Math.max(0,elapsed-active), avgRpe=ent.sets.at(-1)?.rpe||'passend';
+  return Math.round((kcalForMet(exerciseMET(e,avgRpe),active)||0)+(kcalForMet(1.5,rest)||0));
 }
 function isTimeBasedExercise(e){return /(hold|plank|handstand|l-sit|lever|flag|planche|hang|stütz|stuetz)/i.test((e?.name||'')+' '+(e?.target||''))||/(sek|sec| s\b)/i.test(e?.target||'')}
 function autoSetMinutes(e,set){
@@ -117,9 +177,9 @@ function autoSetMinutes(e,set){
     : (parseNum(set.reps)||0);
   return Math.max(0.4,reps?reps*3/60+0.18:0.5);
 }
-function exerciseSessionKcal(id){const ent=workoutEntry(id);if(!ent?.sets?.length)return 0;return Math.round(ent.sets.reduce((a,st)=>a+(Number(st.kcal)||0),0))}
+function exerciseSessionKcal(id){const ent=workoutEntry(id),e=getExercise(id);return e&&ent?entryKcal(e,ent):0}
 function currentWorkoutKcal(){const ids=state.activeWorkout?.ids||[];return Math.round(ids.reduce((a,id)=>a+exerciseSessionKcal(id),0))}
-function currentWorkoutMinutes(){const ids=state.activeWorkout?.ids||[];return Math.round(ids.reduce((a,id)=>{const ent=workoutEntry(id);return a+(ent?.sets||[]).reduce((x,st)=>x+(Number(st.minutes)||0),0)},0)*10)/10}
+function currentWorkoutMinutes(){const w=state.activeWorkout;if(!w)return 0;return Math.round(((Date.now()-new Date(w.startedAt||Date.now()).getTime())/60000)*10)/10}
 function stepKcal(steps){const kg=bodyWeight();if(!kg)return null;const stride=parseFloat(state.settings.strideM)||0.75;const km=Math.max(0,steps)*stride/1000;return Math.round(kg*km*0.5)}
 function todaySteps(){return Number(state.dailySteps[localDateKey()]?.steps||0)}
 function todayStepKcal(){return state.dailySteps[localDateKey()]?.kcal??stepKcal(todaySteps())}
@@ -252,18 +312,18 @@ function ensureWorkoutShape(){
   const w=state.activeWorkout;if(!w)return null;
   w.done=w.done||{};w.entries=w.entries||{};
   for(const id of (w.ids||[])){
-    if(!w.entries[id])w.entries[id]={sets:[],completed:!!w.done[id]};
+    if(!w.entries[id])w.entries[id]={sets:[],completed:!!w.done[id],startedAt:null};
     if(w.done[id])w.entries[id].completed=true;
   }
   return w;
 }
-function workoutEntry(id){const w=ensureWorkoutShape();if(!w)return null;return w.entries[id]||(w.entries[id]={sets:[],completed:false})}
+function workoutEntry(id){const w=ensureWorkoutShape();if(!w)return null;return w.entries[id]||(w.entries[id]={sets:[],completed:false,startedAt:null})}
 function sessionDone(id){const e=workoutEntry(id);return !!e?.completed}
 function sessionSetCount(id){return workoutEntry(id)?.sets?.length||0}
 function startSession(mode,ids,title){
   const cur=state.activeWorkout;
   if(!cur||cur.date!==localDateKey()||cur.mode!==mode||JSON.stringify(cur.ids)!==JSON.stringify(ids)){
-    state.activeWorkout={date:localDateKey(),mode,title,ids:[...ids],done:{},entries:{}};
+    state.activeWorkout={date:localDateKey(),mode,title,ids:[...ids],done:{},entries:{},startedAt:new Date().toISOString()};
   }
   ensureWorkoutShape();save();
 }
@@ -293,7 +353,7 @@ function latestSessionSummary(id){
   return `${n} Satz${n===1?'':'e'} · ${reps}${wt?' · '+wt:''}`;
 }
 function training(){showDailyTraining()}
-function trainingTabs(active){return `<div class="tabs"><button class="tab ${active==='daily'?'active':''}" onclick="showDailyTraining()">Heute</button><button class="tab ${active==='custom'?'active':''}" onclick="showCustomBuilder()">Individuell</button><button class="tab ${active==='catalog'?'active':''}" onclick="showAllExercises()">Übungen</button><button class="tab ${active==='calories'?'active':''}" onclick="showCalories()">🔥 Kalorien</button><button class="tab ${active==='challenge'?'active':''}" onclick="challenge()">🕷️ Challenge</button></div>`}
+function trainingTabs(active){return `<div class="tabs"><button class="tab ${active==='daily'?'active':''}" onclick="showDailyTraining()">Heute</button><button class="tab ${active==='custom'?'active':''}" onclick="showCustomBuilder()">Individuell</button><button class="tab ${active==='catalog'?'active':''}" onclick="showAllExercises()">Übungen</button><button class="tab ${active==='top5'?'active':''}" onclick="showTop5Library()">⭐ Top 5</button><button class="tab ${active==='history'?'active':''}" onclick="showWorkoutHistory()">📖 Verlauf</button><button class="tab ${active==='calories'?'active':''}" onclick="showCalories()">🔥 Kalorien</button><button class="tab ${active==='challenge'?'active':''}" onclick="challenge()">🕷️ Challenge</button></div>`}
 function showDailyTraining(){
   const plan=currentDailyPlan(), ids=currentDailyIds();startSession('daily',ids,plan.name);
   const done=ids.filter(sessionDone).length;
@@ -332,6 +392,8 @@ window.autoOrderCustom=()=>{
   state.customSelection=out;save();toast('Muskelgruppen abwechselnd sortiert ↕️');showCustomBuilder();
 }
 window.startCustomWorkout=()=>{const ids=(state.customSelection||[]).slice(0,8);if(!ids.length)return toast('Wähle mindestens eine Übung');startSession('custom',ids,'Individuelles Training');renderCustomWorkout()}
+window.showTop5Library=()=>{const groups=[...new Set(exerciseLibrary.map(x=>x.group))];const eq=[...new Set(exerciseLibrary.map(x=>x.equipment))];view.innerHTML=`<div class="sectiontitle"><div><h2>⭐ Übungsfinder</h2><div class="muted">Bis zu 5 starke Optionen nach Muskelgruppe & Equipment</div></div></div>${trainingTabs('top5')}<div class="card formgrid"><div class="field"><label>Muskelgruppe</label><select id="libGroup">${groups.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="field"><label>Equipment</label><select id="libEq">${eq.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="field"><label>Ziel</label><select id="libGoal"><option value="hypertrophy">Muskelaufbau</option><option value="strength">Kraft</option><option value="all">Allround</option></select></div><button class="btn" onclick="renderTop5()">Top 5 anzeigen</button></div><div id="libResults"><div class="empty">Wähle Muskelgruppe und Equipment.</div></div><div class="tiny">„Top 5“ bedeutet hier FitQuest-Auswahl nach Ziel, Progressionsfähigkeit und Praxistauglichkeit – kein wissenschaftlich eindeutiges Weltranking.</div>`};
+window.renderTop5=()=>{const g=$('#libGroup').value,e=$('#libEq').value,goal=$('#libGoal').value;let xs=exerciseLibrary.filter(x=>x.group===g&&x.equipment===e);if(goal!=='all')xs.sort((a,b)=>(b.goal===goal)-(a.goal===goal));$('#libResults').innerHTML=xs.length?`<div class="sectiontitle"><h2>${g}</h2><span class="tag green">${e}</span></div>`+xs.slice(0,5).map((x,i)=>`<div class="exercise"><div><div class="name">${i+1}. ${x.name}</div><div class="muted">${x.goal==='strength'?'Kraftfokus':x.goal==='hypertrophy'?'Muskelaufbau':'Technik/Kontrolle'}</div></div><span>⭐</span></div>`).join(''):`<div class="empty">Für diese Kombination ist noch kein kuratierter Top-5-Satz hinterlegt.</div>`};
 function renderCustomWorkout(){const ids=state.activeWorkout?.mode==='custom'?state.activeWorkout.ids:(state.customSelection||[]);view.innerHTML=`<div class="sectiontitle"><div><h2>🎛️ Individuelles Training</h2><div class="muted">${ids.length} Übungen</div></div><span class="tag green">${ids.filter(sessionDone).length}/${ids.length}</span></div>${trainingTabs('custom')}<div class="training-summary"><b>Aktuelle Session</b><span>🔥 bisher ≈ ${currentWorkoutKcal()} kcal*</span><small>* geschätzte Aktivitätskalorien</small></div><div class="workout-overview single">${ids.map((id,i)=>compactExercise(getExercise(id),i+1)).join('')}</div><button class="btn block" style="margin-top:14px" onclick="completeWorkout('custom')">✅ Training abschließen</button><button class="btn secondary block" style="margin-top:8px" onclick="showCustomBuilder()">Übungen ändern</button>`}
 window.openExerciseForm=()=>modal(`<h2>Neue Übung</h2><div class="formgrid">
 <div class="field"><label>Name</label><input id="fName" placeholder="z. B. einarmiges Rudern"></div>
@@ -344,6 +406,7 @@ window.saveExercise=()=>{const name=$('#fName').value.trim();if(!name)return toa
 window.logExercise=id=>{
   const e=getExercise(id);if(!e)return;
   const ent=(state.activeWorkout&&state.activeWorkout.ids?.includes(id))?workoutEntry(id):null;
+  if(ent&&!ent.startedAt){ent.startedAt=new Date().toISOString();save();}
   const sets=ent?.sets||[];const unilateral=isUnilateralExercise(e), dumbbell=isDumbbellExercise(e);
   const setRows=sets.length?sets.map((x,i)=>`<div class="setrow"><b>Satz ${i+1}</b><span>${unilateral?`Links ${x.leftReps||'–'} · Rechts ${x.rightReps||'–'}`:`${x.reps||'–'} Wdh./Sek.`}</span><small>${x.weightPerDumbbell?`${formatKg(x.weightPerDumbbell)} je Hantel · ${x.dumbbellCount||1} Hantel${(x.dumbbellCount||1)>1?'n':''} · ${formatKg(x.weightPerDumbbell*(x.dumbbellCount||1))} gesamt`:x.load||'Körpergewicht'}${x.rpe?' · '+x.rpe:''}${x.minutes?` · ${x.minutes} Min.`:''}${x.kcal!=null?` · 🔥 ≈ ${x.kcal} kcal`:''}</small><button class="iconbtn" onclick="deleteSessionSet('${id}',${i})">✕</button></div>`).join(''):'<div class="empty small">Noch kein Satz gespeichert.</div>';
   modal(`<h2>${e.name}</h2>${exerciseIllustration(e,'large')}<div class="tiny visualhint">Jeden neuen Satz direkt speichern: Er bleibt erhalten und bringt einmal XP. Beim erneuten Öffnen werden alte Sätze nur angezeigt – ohne doppelte XP.</div>
@@ -365,13 +428,13 @@ window.saveSessionSet=id=>{
   else{set.reps=$('#lReps')?.value.trim()||'';if(!set.reps)return toast('Wiederholungen oder Sekunden eintragen');}
   const enteredMinutes=parseFloat(String($('#lMinutes')?.value||'').replace(',','.'));
   set.minutes=Number.isFinite(enteredMinutes)&&enteredMinutes>0?enteredMinutes:autoSetMinutes(e,set);set.minutes=Math.round(set.minutes*100)/100;
-  set.kcal=kcalEstimate(e,set.minutes,set.rpe);
+  set.kcal=null;
   if(dumbbell){set.weightPerDumbbell=parseNum($('#lWeightEach')?.value);set.dumbbellCount=Number($('#lDbCount')?.value)||1;if(set.weightPerDumbbell!=null)e.load=`${String(set.weightPerDumbbell).replace('.',',')} kg pro Hantel`;}
   else{set.load=$('#lLoad')?.value.trim()||'';if(set.load)e.load=set.load;}
   // XP belongs to the NEW saved set, not to reopening an old one.
   // The flag is stored on the set itself so an existing set can never award XP twice.
   set.xpAwarded=true;
-  if(set.kcal!=null)state.calorieLog.push({date:localDateKey(),type:'exercise',sourceId:set.id,exerciseId:id,label:e.name,kcal:set.kcal,minutes:set.minutes,rpe:set.rpe});
+
   if(state.activeWorkout&&state.activeWorkout.ids?.includes(id)){
     const ent=workoutEntry(id);ent.sets.push(set);if(ent.completed)syncCompletedExerciseHistory(id);save();addXp(10,`Satz ${ent.sets.length} gespeichert!`);logExercise(id);return;
   }
@@ -392,15 +455,20 @@ window.finishExercise=id=>{
     e.history=e.history||[];e.history.push({date:new Date().toISOString(),sessionDate:localDateKey(),reps:summary,load:bestWeight!=null?`${bestWeight} kg pro Hantel`:e.load,weightPerDumbbell:bestWeight,sets:structuredClone(ent.sets)});
     state.activityLog.push({date:localDateKey(),type:'exercise',label:e.name});
   }
-  const exerciseKcal=exerciseSessionKcal(id);const exerciseMinutes=Math.round(ent.sets.reduce((a,st)=>a+(Number(st.minutes)||0),0)*10)/10;
+  ent.finishedAt=new Date().toISOString();ent.finalKcal=entryKcal(e,ent);const exerciseKcal=ent.finalKcal;const exerciseMinutes=Math.round(entryElapsedMinutes(ent)*10)/10;state.calorieLog=state.calorieLog.filter(x=>!(x.type==='exercise'&&x.sourceId==='finish_'+localDateKey()+'_'+id));state.calorieLog.push({date:localDateKey(),type:'exercise',sourceId:'finish_'+localDateKey()+'_'+id,exerciseId:id,label:e.name,kcal:exerciseKcal,minutes:exerciseMinutes,rpe:ent.sets.at(-1)?.rpe||'passend'});
   save();closeModal();
   // Satz-XP wurden bereits beim Speichern jedes neuen Satzes vergeben.
   // Beim Abschließen gibt es daher keine normalen XP noch einmal. Ein echter PR bleibt ein Bonus.
   if(firstCompletion&&(weightPR||repPR))addXp(25,`🏆 Neuer ${weightPR?'Gewichts-':'Wiederholungs-'}PR!`);
   if(currentView==='training'){state.activeWorkout?.mode==='custom'?renderCustomWorkout():showDailyTraining()}
-  setTimeout(()=>modal(`<div class="celebrate">🔥</div><h2>${e.name} abgeschlossen</h2><div class="hero kcalhero"><div class="muted">GESCHÄTZTER VERBRAUCH DIESER ÜBUNG</div><div class="kpi">${bodyWeight()?`≈ ${exerciseKcal} kcal*`:'Körpergewicht fehlt'}</div><div class="muted">${ent.sets.length} Sätze · ca. ${exerciseMinutes} Min. Belastungszeit</div></div>${!bodyWeight()?`<div class="notice">Bitte unter ⚙️ Einstellungen deine Körperdaten ergänzen. Ohne Körpergewicht kann FitQuest keine brauchbare Aktivitätskalorien-Schätzung bilden.</div>`:''}<div class="tiny">* Modellschätzung aus Körpergewicht, Übungstyp, Belastungsdauer und Intensität; keine Messung.</div><button class="btn block" onclick="closeModal()">Weiter trainieren</button>`),30);
+  setTimeout(()=>modal(`<div class="celebrate">🔥</div><h2>${e.name} abgeschlossen</h2><div class="hero kcalhero"><div class="muted">GESCHÄTZTER VERBRAUCH DIESER ÜBUNG</div><div class="kpi">${bodyWeight()?`≈ ${exerciseKcal} kcal*`:'Körpergewicht fehlt'}</div><div class="muted">${ent.sets.length} Sätze · ca. ${exerciseMinutes} Min. Belastungszeit</div></div>${!bodyWeight()?`<div class="notice">Bitte unter ⚙️ Einstellungen deine Körperdaten ergänzen. Ohne Körpergewicht kann FitQuest keine brauchbare Aktivitätskalorien-Schätzung bilden.</div>`:''}<div class="tiny">* Modellschätzung aus Körpergewicht, Übungstyp, Belastungsdauer und Intensität; keine Messung.</div><button class="btn block" onclick="showKnowledgeQuiz('${id}')">🧠 Bonusfrage beantworten</button><button class="btn secondary block" onclick="closeModal()">Ohne Quiz weiter</button>`),30);
 }
-window.completeWorkout=(mode='daily')=>{const ids=state.activeWorkout?.ids||[];const done=ids.filter(sessionDone).length;if(ids.length&&done<Math.ceil(ids.length/2)&&!confirm(`Erst ${done}/${ids.length} Übungen abgehakt. Training trotzdem abschließen?`))return;const workoutKcal=currentWorkoutKcal(),workoutMinutes=currentWorkoutMinutes(),title=state.activeWorkout?.title||'Training';state.workouts++;state.activityLog.push({date:localDateKey(),type:'workout',label:title});if(mode==='daily'){state.planRotation=((state.planRotation||0)+1)%dailyPlans.length;state.lastDailyCompletedDate=localDateKey()}state.activeWorkout=null;save();const gotQuest=completeQuest('train',250,'Daily Training geschafft!');if(!gotQuest){addXp(50,'Workout abgeschlossen!')}home();setTimeout(()=>modal(`<div class="celebrate">🏁</div><h2>${title} abgeschlossen</h2><div class="hero kcalhero"><div class="muted">GESCHÄTZTER TRAININGSVERBRAUCH</div><div class="kpi">${bodyWeight()?`≈ ${workoutKcal} kcal*`:'Körpergewicht fehlt'}</div><div class="muted">${done}/${ids.length} Übungen abgeschlossen · ca. ${workoutMinutes} Min. erfasste Belastungszeit</div></div>${!bodyWeight()?`<div class="notice">Ergänze unter ⚙️ Einstellungen dein Körpergewicht. Größe, Alter und Geschlecht werden ebenfalls als Profildaten gespeichert.</div>`:''}<div class="tiny">* Aktivitätskalorien-Schätzung. Sie ist kein Messwert und enthält nicht deinen Grundumsatz.</div><button class="btn block" onclick="closeModal()">Fertig</button>`),80)}
+window.completeWorkout=(mode='daily')=>{const ids=state.activeWorkout?.ids||[];const done=ids.filter(sessionDone).length;if(ids.length&&done<Math.ceil(ids.length/2)&&!confirm(`Erst ${done}/${ids.length} Übungen abgehakt. Training trotzdem abschließen?`))return;const workoutKcal=currentWorkoutKcal(),workoutMinutes=currentWorkoutMinutes(),title=state.activeWorkout?.title||'Training';const snapshot={id:'wo_'+Date.now(),date:localDateKey(),finishedAt:new Date().toISOString(),title,mode,kcal:workoutKcal,minutes:workoutMinutes,exercises:ids.map(id=>{const e=getExercise(id),ent=workoutEntry(id);return {id,name:e?.name||id,completed:!!ent?.completed,kcal:exerciseSessionKcal(id),sets:structuredClone(ent?.sets||[])};})};state.workoutHistory.push(snapshot);state.workouts++;state.activityLog.push({date:localDateKey(),type:'workout',label:title});if(mode==='daily'){state.planRotation=((state.planRotation||0)+1)%dailyPlans.length;state.lastDailyCompletedDate=localDateKey()}state.activeWorkout=null;save();const gotQuest=completeQuest('train',250,'Daily Training geschafft!');if(!gotQuest){addXp(50,'Workout abgeschlossen!')}home();setTimeout(()=>modal(`<div class="celebrate">🏁</div><h2>${title} abgeschlossen</h2><div class="hero kcalhero"><div class="muted">GESCHÄTZTER TRAININGSVERBRAUCH</div><div class="kpi">${bodyWeight()?`≈ ${workoutKcal} kcal*`:'Körpergewicht fehlt'}</div><div class="muted">${done}/${ids.length} Übungen abgeschlossen · ca. ${workoutMinutes} Min. erfasste Belastungszeit</div></div>${!bodyWeight()?`<div class="notice">Ergänze unter ⚙️ Einstellungen dein Körpergewicht. Größe, Alter und Geschlecht werden ebenfalls als Profildaten gespeichert.</div>`:''}<div class="tiny">* Aktivitätskalorien-Schätzung. Sie ist kein Messwert und enthält nicht deinen Grundumsatz.</div><button class="btn block" onclick="closeModal()">Fertig</button>`),80)}
+function showWorkoutHistory(){
+  const items=[...(state.workoutHistory||[])].reverse();
+  view.innerHTML=`${trainingTabs('history')}<div class="sectiontitle"><h2>📖 Trainingstagebuch</h2><span class="tag green">${items.length}</span></div>${items.length?items.map(w=>`<details class="card historywork"><summary><div><b>${new Date(w.date+'T12:00:00').toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'})} · ${w.title}</b><small>${w.minutes?Math.round(w.minutes)+' Min. · ':''}🔥 ≈ ${w.kcal||0} kcal</small></div></summary><div class="historyex">${w.exercises.map(e=>`<div class="historyrow"><b>${e.completed?'✅':'▫️'} ${e.name}</b><span>🔥 ≈ ${e.kcal||0} kcal</span>${e.sets.length?`<small>${e.sets.map((st,i)=>`S${i+1}: ${st.leftReps||st.rightReps?`L ${st.leftReps||'–'} / R ${st.rightReps||'–'}`:`${st.reps||'–'} Wdh.`}${st.weightPerDumbbell?` · ${formatKg(st.weightPerDumbbell)} je Hantel`:''}`).join(' · ')}</small>`:''}</div>`).join('')}</div></details>`).join(''):'<div class="empty">Noch kein abgeschlossenes Workout im Trainingstagebuch.</div>'}`;
+}
+window.showWorkoutHistory=showWorkoutHistory;
 function showCalories(){
   ensureDailyReset();
   const kg=bodyWeight(), exK=exerciseCaloriesForDate(), stepK=todayStepKcal()||0, total=exK+stepK, week=calorieWeek();
@@ -441,6 +509,7 @@ window.winBoss=id=>{const s=skills.find(x=>x.id===id);state.bossWins[id]=new Dat
 
 function body(){view.innerHTML=`<div class="sectiontitle"><h2>📷 KI-Körpercheck</h2><span class="tag yellow">Beta</span></div><div class="notice">Diese lokale PWA kann Fotos bereits aufnehmen und speichern. Eine belastbare KI-Auswertung ist in dieser Version bewusst noch nicht aktiviert – dafür braucht die App ein Bildanalyse-Backend. Keine medizinischen Diagnosen.</div><div class="card" style="margin-top:12px"><h3>1. Entspannt</h3><div class="photozone"><input type="file" accept="image/*" capture="environment" onchange="previewPhoto(event,'relaxed')"><div class="muted">Vorne · hinten · seitlich, gleiches Licht und gleicher Abstand</div><div id="relaxedPreview"></div></div></div><div class="card" style="margin-top:12px"><h3>2. Angespannt</h3><div class="photozone"><input type="file" accept="image/*" capture="environment" onchange="previewPhoto(event,'flexed')"><div class="muted">Standardisierte Pose für Vergleichbarkeit</div><div id="flexedPreview"></div></div></div><div class="card" style="margin-top:12px"><h3>Geplante KI-Auswertung</h3><p class="muted">Symmetrie · sichtbare Proportionen · Körperhaltung · Links/Rechts-Vergleich · Verbindung mit unilateralem Leistungstest · passende Übungsvorschläge.</p><button class="btn secondary block" onclick="toast('KI-Modul bleibt für die nächste Backend-Stufe vorbereitet.')">Analyse starten</button></div>`}
 window.previewPhoto=(ev,type)=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{document.getElementById(type+'Preview').innerHTML=`<img src="${r.result}" alt="Körperfoto">`;toast('Foto lokal geladen 📷')};r.readAsDataURL(f)}
+function sportBadge(){const age=Number(state.settings.age)||0,sex=state.settings.sex;const eligible=sex==='male'&&age>=35&&age<=39;const groups=[['❤️','Ausdauer','endurance'],['💪','Kraft','strength'],['⚡','Schnelligkeit','speed'],['🎯','Koordination','coordination']];view.innerHTML=`<div class="sectiontitle"><div><h2>🏅 Mission Sportabzeichen</h2><div class="muted">DOSB-Leistungswerte 2026</div></div><span class="tag green">${eligible?'M 35–39':'Profil prüfen'}</span></div>${!eligible?`<div class="notice">Die erste FitQuest-Version des Sportabzeichens enthält die offiziellen Werte für Männer 35–39. Dein Profil ist aktuell Alter ${age||'–'}, Geschlecht ${sex||'–'}. Weitere Altersklassen folgen.</div>`:''}<div class="hero"><div class="muted">DEIN REAL-LIFE-BOSS</div><div class="level">DEUTSCHES SPORTABZEICHEN</div><p>Je eine Disziplin aus Ausdauer, Kraft, Schnelligkeit und Koordination mindestens Bronze + Schwimmnachweis.</p></div>${groups.map(([ic,n,k])=>`<div class="sectiontitle"><h2>${ic} ${n}</h2></div><div class="card sporttable"><div class="sporthead"><span>Disziplin</span><b>🥉</b><b>🥈</b><b>🥇</b></div>${sportBadge35M[k].map(r=>`<div class="sportrow"><span>${r[0]}</span><span>${r[1]}</span><span>${r[2]}</span><span>${r[3]}</span></div>`).join('')}</div>`).join('')}<div class="sectiontitle"><h2>🏊 Schwimmnachweis</h2></div><div class="card"><p class="muted">Für das Deutsche Sportabzeichen ist zusätzlich ein gültiger Schwimmnachweis erforderlich. FitQuest behandelt ihn separat von den vier Leistungsgruppen.</p></div><div class="notice">Die Prüfungsleistung muss nach den DOSB-Regeln abgenommen bzw. anerkannt werden. FitQuest ist Trainingsbegleiter, keine offizielle Prüfstelle.</div>`}
 function progress(){const mastered=skills.filter(s=>(state.skillProgress[s.id]??0)>=s.steps.length),week=recentWeek(),todayKcal=state.calorieLog.filter(x=>x.date===localDateKey()).reduce((a,x)=>a+(x.kcal||0),0)+(todayStepKcal()||0);view.innerHTML=`<div class="sectiontitle"><h2>🏆 Fortschritt</h2><span class="tag green">Level ${state.level}</span></div><div class="hero"><div class="kpi">${state.xp} XP</div><div class="muted">Heute grob geschätzt: ${todayKcal} kcal Aktivität*</div><div class="tiny">* MET-/Schritt-Schätzung, kein Messwert.</div></div><div class="sectiontitle"><h2>📅 Diese Woche</h2></div><div class="weekgrid">${week.map(d=>`<div class="daycard ${d.key===localDateKey()?'today':''}"><b>${d.label}</b><span>${d.items.filter(x=>x.type==='workout').length?'🏋️':''}${d.items.filter(x=>x.type==='boss').length?'🏆':''}</span><small>${d.steps?d.steps.toLocaleString('de-DE')+' 👟':'–'}</small></div>`).join('')}</div><div class="sectiontitle"><h2>Boss-Trophäen</h2></div>${mastered.length?mastered.map(s=>`<div class="exercise"><div><div class="name">🏆 ${s.boss}</div><div class="muted">${s.name} gemeistert</div></div><span>⚡ +750</span></div>`).join(''):'<div class="empty">Noch kein Boss besiegt. Dein erster wartet schon.</div>'}<div class="sectiontitle"><h2>Shadow You</h2></div><div class="boss"><div class="bossicon">🌑</div><h2>Dein früheres Ich</h2><p class="muted">FitQuest sammelt Bestleistungen und kann daraus später persönliche Bossfights bilden. Aktueller Spider-Man-Rekord: ${state.records.spiderman} Runden.</p></div>`}
 function settings(){modal(`<h2>⚙️ Einstellungen</h2><div class="formgrid"><h3>👤 Körperdaten</h3><div class="grid"><div class="field"><label>Gewicht (kg)</label><input id="bodyWeightKg" inputmode="decimal" value="${state.settings.bodyWeightKg||''}" placeholder="z. B. 78"></div><div class="field"><label>Größe (cm)</label><input id="bodyHeightCm" inputmode="numeric" value="${state.settings.bodyHeightCm||''}" placeholder="z. B. 175"></div></div><div class="grid"><div class="field"><label>Alter</label><input id="age" inputmode="numeric" value="${state.settings.age||''}" placeholder="z. B. 38"></div><div class="field"><label>Geschlecht</label><select id="sex"><option value="" ${!state.settings.sex?'selected':''}>Keine Angabe</option><option value="male" ${state.settings.sex==='male'?'selected':''}>männlich</option><option value="female" ${state.settings.sex==='female'?'selected':''}>weiblich</option><option value="other" ${state.settings.sex==='other'?'selected':''}>divers / andere</option></select></div></div><div class="tiny">Für die Aktivitätskalorien beim Krafttraining ist vor allem dein Körpergewicht relevant. Größe, Alter und Geschlecht werden als Profildaten gespeichert und können später z. B. für Grundumsatz-/Tagesbedarfsfunktionen genutzt werden.</div><div class="field"><label>Schrittlänge (m)</label><input id="strideM" inputmode="decimal" value="${state.settings.strideM||0.75}"></div><div class="field"><label>Coach-Stil</label><select id="coachTone"><option ${state.settings.coachTone==='motivierend'?'selected':''}>motivierend</option><option>ruhig</option><option>knallhart</option></select></div><h3>Equipment</h3>${Object.entries({pullup:'Klimmzugstange',bench:'Kurzhantelbank',dumbbell:'Kurzhanteln',bands:'Reverse-/Widerstandsbänder',rack:'Rack',barbell:'Langhantel',rings:'Ringe',dips:'Dip-Barren'}).map(([k,n])=>`<label class="exercise"><span>${n}</span><input type="checkbox" id="eq_${k}" ${state.equipment[k]?'checked':''}></label>`).join('')}<div class="field"><label>Spielmodus</label><select id="gameMode"><option value="on" ${state.settings.gameMode?'selected':''}>An – XP, Quests, Bosse</option><option value="off" ${!state.settings.gameMode?'selected':''}>Aus – sachlich</option></select></div><button class="btn" onclick="saveSettings()">Speichern</button><button class="btn secondary" onclick="requestNotify()">🔔 22-Uhr-App-Benachrichtigung erlauben</button><div class="tiny">Hinweis: Eine reine PWA kann eine exakte 22-Uhr-Meldung bei vollständig geschlossener App nicht auf jedem Android-Gerät zuverlässig garantieren.</div><button class="btn danger" onclick="resetApp()">App zurücksetzen</button></div>`)}
 window.saveSettings=()=>{state.settings.bodyWeightKg=$('#bodyWeightKg').value;state.settings.bodyHeightCm=$('#bodyHeightCm')?.value||'';state.settings.age=$('#age')?.value||'';state.settings.sex=$('#sex')?.value||'';state.settings.strideM=parseFloat(String($('#strideM').value).replace(',','.'))||0.75;state.settings.coachTone=$('#coachTone').value;state.settings.gameMode=$('#gameMode').value==='on';for(const k of Object.keys(state.equipment))state.equipment[k]=$('#eq_'+k).checked;save();closeModal();toast('Einstellungen gespeichert ✅')}
@@ -448,7 +517,7 @@ window.requestNotify=async()=>{if(!('Notification'in window))return toast('Brows
 window.resetApp=()=>{if(confirm('Wirklich alle lokalen App-Daten löschen?')){localStorage.removeItem('fitquest-state');state=structuredClone(defaults);ensureDailyReset();closeModal();home()}}
 function modal(html){$('#modalBody').innerHTML=html;$('#modal').classList.remove('hidden')}
 function closeModal(){$('#modal').classList.add('hidden')};window.closeModal=closeModal;
-function go(v){currentView=v;header();if(v==='home')home();if(v==='training')training();if(v==='skills')skillsView();if(v==='body')body();if(v==='progress')progress()};window.go=go;
+function go(v){currentView=v;header();if(v==='home')home();if(v==='training')training();if(v==='skills')skillsView();if(v==='body')body();if(v==='sport')sportBadge();if(v==='progress')progress()};window.go=go;
 document.querySelectorAll('.bottomnav button').forEach(b=>b.onclick=()=>go(b.dataset.view));$('#closeModal').onclick=closeModal;$('#settingsBtn').onclick=settings;
 $('#todayLabel').textContent=new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'2-digit'}).format(new Date());
 ensureDailyReset();scheduleMidnightReset();scheduleStepReminder();
