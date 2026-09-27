@@ -1,18 +1,14 @@
-FITQUEST V0.2
-=============
+FitQuest V0.3 COMPLETE
+======================
+Alle Dateien direkt ins Hauptverzeichnis des GitHub-Pages-Repositories hochladen.
 
-Neu:
-- Daily Quests werden jeden Kalendertag automatisch zurueckgesetzt.
-- Wenn die App ueber Mitternacht offen bleibt, erfolgt der Reset automatisch.
-- Daily Training: maximal 8 Uebungen, kompakt auf einen Blick.
-- 4 Wechselbloecke mit unterschiedlichen Muskelgruppen fuer kompakte Einheiten.
-- 3 rotierende Ganzkoerperplaene A/B/C auf Basis des Uebungskatalogs.
-- Individuelles Training: bis zu 8 Uebungen frei waehlen.
-- Individuelle Auswahl kann nach Muskelgruppen automatisch abwechselnd sortiert werden.
-- Uebungskatalog nach Muskelgruppen einklappbar.
-- Eingetragene Uebungen werden im aktuellen Workout gruen abgehakt.
-- Bestehende lokale Daten aus V0.1 werden weiterverwendet.
-- Service Worker Cache auf V0.2 aktualisiert.
+Neu in dieser V0.3:
+- 18 individuelle Calisthenics-Skillpfade
+- konkrete Voruebungen mit Dosierung
+- Technik-Tipps und typische Fehler
+- Video/Hilfe-Link pro Drill sowie Skill-Link
+- leistungsbasierte Level-Tests statt automatischem Aufstieg nach Sitzungen
+- Bossfight nach Abschluss aller Progressionsstufen
+- vorhandene lokale FitQuest-Daten werden weiterverwendet
 
-GitHub Pages Update:
-Alle 8 Dateien liegen weiterhin direkt im Hauptverzeichnis. Beim Upload auf GitHub die bestehenden Dateien ersetzen.
+Hinweis: Video-Buttons oeffnen gezielte YouTube-Suchen bzw. fachliche Skill-Seiten. So bleibt die Hilfe funktionsfaehig, auch wenn einzelne YouTube-Videos geloescht werden.
