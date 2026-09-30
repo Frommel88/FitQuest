@@ -434,7 +434,49 @@ function fig(x,y,head=8,arms='down',legs='stand',lean=0,extra=''){
 }
 function pose(html,which){return `<g class="exercise-pose ${which}">${html}</g>`}
 function exerciseCue(e){return exerciseMeta[e?.id]?.cue||''}
+
+function proPullupIllustration(e,size='small'){
+  const label=(e?.name||'Klimmzüge').replace(/[<>]/g,'');
+  return `<div class="exvisual pro-visual ${size}" title="${label}">
+  <svg class="pullup-anatomy" viewBox="0 0 180 150" role="img" aria-label="Animierte Ausführung: ${label}" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <linearGradient id="bodyShade" x1="0" x2="1"><stop offset="0" stop-color="#c7d5df"/><stop offset="1" stop-color="#8fa6b7"/></linearGradient>
+      <linearGradient id="muscleShade" x1="0" x2="1"><stop offset="0" stop-color="#ff5b68"/><stop offset="1" stop-color="#ff9a62"/></linearGradient>
+    </defs>
+    <rect x="22" y="12" width="136" height="8" rx="4" class="pro-bar"/>
+    <circle cx="44" cy="19" r="4" class="pro-grip"/><circle cx="136" cy="19" r="4" class="pro-grip"/>
+
+    <g class="pro-human">
+      <ellipse cx="90" cy="56" rx="15" ry="17" class="pro-head">
+        <animate attributeName="cy" values="56;30;56" dur="2.6s" repeatCount="indefinite" keyTimes="0;.5;1" calcMode="spline" keySplines=".42 0 .2 1;.42 0 .2 1"/>
+      </ellipse>
+      <path class="pro-neck" d="M84 69 Q90 73 96 69 L96 76 L84 76 Z">
+        <animate attributeName="d" values="M84 69 Q90 73 96 69 L96 76 L84 76 Z;M84 43 Q90 47 96 43 L96 50 L84 50 Z;M84 69 Q90 73 96 69 L96 76 L84 76 Z" dur="2.6s" repeatCount="indefinite"/>
+      </path>
+      <path class="pro-torso" d="M70 76 Q90 67 110 76 L116 110 Q104 119 90 118 Q76 119 64 110 Z">
+        <animate attributeName="d" values="M70 76 Q90 67 110 76 L116 110 Q104 119 90 118 Q76 119 64 110 Z;M69 50 Q90 42 111 50 L116 86 Q104 95 90 94 Q76 95 64 86 Z;M70 76 Q90 67 110 76 L116 110 Q104 119 90 118 Q76 119 64 110 Z" dur="2.6s" repeatCount="indefinite"/>
+      </path>
+      <path class="pro-lat muscle" d="M70 79 Q61 90 65 108 Q72 103 79 93 L80 78 Z">
+        <animate attributeName="d" values="M70 79 Q61 90 65 108 Q72 103 79 93 L80 78 Z;M69 53 Q60 64 64 84 Q71 79 79 69 L80 52 Z;M70 79 Q61 90 65 108 Q72 103 79 93 L80 78 Z" dur="2.6s" repeatCount="indefinite"/>
+      </path>
+      <path class="pro-lat muscle" d="M110 79 Q119 90 115 108 Q108 103 101 93 L100 78 Z">
+        <animate attributeName="d" values="M110 79 Q119 90 115 108 Q108 103 101 93 L100 78 Z;M111 53 Q120 64 116 84 Q109 79 101 69 L100 52 Z;M110 79 Q119 90 115 108 Q108 103 101 93 L100 78 Z" dur="2.6s" repeatCount="indefinite"/>
+      </path>
+      <path class="pro-arm" d="M72 79 Q59 55 44 22"><animate attributeName="d" values="M72 79 Q59 55 44 22;M69 53 Q57 49 61 34 Q54 28 44 22;M72 79 Q59 55 44 22" dur="2.6s" repeatCount="indefinite"/></path>
+      <path class="pro-arm" d="M108 79 Q121 55 136 22"><animate attributeName="d" values="M108 79 Q121 55 136 22;M111 53 Q123 49 119 34 Q126 28 136 22;M108 79 Q121 55 136 22" dur="2.6s" repeatCount="indefinite"/></path>
+      <path class="pro-biceps muscle-stroke" d="M68 70 Q58 51 51 39"><animate attributeName="d" values="M68 70 Q58 51 51 39;M70 52 Q61 49 61 37;M68 70 Q58 51 51 39" dur="2.6s" repeatCount="indefinite"/></path>
+      <path class="pro-biceps muscle-stroke" d="M112 70 Q122 51 129 39"><animate attributeName="d" values="M112 70 Q122 51 129 39;M110 52 Q119 49 119 37;M112 70 Q122 51 129 39" dur="2.6s" repeatCount="indefinite"/></path>
+      <path class="pro-legs" d="M78 114 Q77 131 74 145 M102 114 Q103 131 106 145"><animate attributeName="d" values="M78 114 Q77 131 74 145 M102 114 Q103 131 106 145;M78 90 Q78 112 75 136 M102 90 Q102 112 105 136;M78 114 Q77 131 74 145 M102 114 Q103 131 106 145" dur="2.6s" repeatCount="indefinite"/></path>
+      <path class="pro-shorts" d="M72 106 Q90 114 108 106 L106 120 Q90 125 74 120 Z"><animate attributeName="d" values="M72 106 Q90 114 108 106 L106 120 Q90 125 74 120 Z;M72 82 Q90 90 108 82 L106 96 Q90 101 74 96 Z;M72 106 Q90 114 108 106 L106 120 Q90 125 74 120 Z" dur="2.6s" repeatCount="indefinite"/></path>
+    </g>
+    <path class="pro-motion" d="M151 116 C165 96 165 58 151 37"/>
+    <path class="pro-arrow" d="M147 43 L151 36 L157 43"/>
+  </svg>
+  <span>Latissimus · Bizeps</span></div>`;
+}
+
 function exerciseIllustration(e,size='small'){
+  if(movementKind(e)==='pullup') return proPullupIllustration(e,size);
   if(e?.media&&/\.(png|jpe?g|webp|gif)(\?|$)/i.test(e.media))return `<div class="exvisual ${size}"><img src="${e.media}" alt="Ausführung ${e.name}" loading="lazy"></div>`;
   const k=movementKind(e);let body='';
   const bar='<path class="equip" d="M18 12 H74"/><path class="equip" d="M22 12 V17 M70 12 V17"/>';
