@@ -483,7 +483,7 @@ function proPullupIllustration(e,size='small'){
   </div>`;
 }
 
-function exerciseIllustration(e,size='small'){
+function legacyExerciseIllustration(e,size='small'){
   if(movementKind(e)==='pullup') return proPullupIllustration(e,size);
   if(e?.media&&/\.(png|jpe?g|webp|gif)(\?|$)/i.test(e.media))return `<div class="exvisual ${size}"><img src="${e.media}" alt="Ausführung ${e.name}" loading="lazy"></div>`;
   const k=movementKind(e);let body='';
@@ -527,6 +527,36 @@ function exerciseIllustration(e,size='small'){
   }
   const label=(e.name||'Übung').replace(/[<>]/g,'');
   return `<div class="exvisual ${size}" title="${label}"><svg viewBox="0 0 92 68" role="img" aria-label="Animierte Ausführung: ${label}" preserveAspectRatio="xMidYMid meet">${body}</svg><span>Bewegung</span></div>`;
+}
+
+
+function muscleProfile(e){
+  const n=(e?.name||'').toLowerCase(),g=(e?.group||'').toLowerCase();
+  const p={primary:[],secondary:[],stabilizer:[],zones:[]};
+  const add=(k,...xs)=>{for(const x of xs)if(x&&!p[k].includes(x))p[k].push(x)};
+  if(g.includes('rücken')||/rudern|klimm|pull-up|lever/.test(n)){add('primary','Latissimus','Rhomboiden');add('secondary','Bizeps','Brachialis','hintere Schulter');add('stabilizer','Trapez','Core');p.zones.push('back','biceps')}
+  if(g.includes('brust')||/bankdrück|liegestütz|push-up|dip/.test(n)){add('primary','Brustmuskel');add('secondary','Trizeps','vordere Schulter');add('stabilizer','Core','Serratus');p.zones.push('chest','triceps','shoulder')}
+  if(g.includes('schulter')||/seitheben|frontheben|schulterdrück|upright|face pull/.test(n)){add('primary','Deltamuskel');add('secondary','Trapez','Rotatorenmanschette');add('stabilizer','Core');p.zones.push('shoulder')}
+  if(g.includes('bizeps')||/curl|preacher/.test(n)){add('primary','Bizeps','Brachialis');add('secondary','Brachioradialis','Unterarm');add('stabilizer','vordere Schulter');p.zones.push('biceps','forearm')}
+  if(g.includes('trizeps')||/trizeps|skull crusher/.test(n)){add('primary','Trizeps');add('secondary','Schulter');add('stabilizer','Core');p.zones.push('triceps')}
+  if(g.includes('unterarm')||/handgelenk|grip/.test(n)){add('primary','Unterarmbeuger/-strecker');add('secondary','Brachioradialis');add('stabilizer','Handgelenk');p.zones.push('forearm')}
+  if(g.includes('bein')||g.includes('oberschenkel')||/squat|lunge|split|pistol|shrimp|dragon squat/.test(n)){add('primary','Quadrizeps','Gesäß');add('secondary','Beinbeuger','Adduktoren');add('stabilizer','Waden','Core');p.zones.push('quads','glutes','hamstrings')}
+  if(g.includes('gesäß')||/hip thrust|donkey/.test(n)){add('primary','Großer Gesäßmuskel');add('secondary','Beinbeuger');add('stabilizer','Core','Hüftstabilisatoren');p.zones.push('glutes','hamstrings')}
+  if(g.includes('waden')||/waden|calf/.test(n)){add('primary','Wadenmuskulatur');add('secondary','Soleus');add('stabilizer','Fußmuskulatur');p.zones.push('calves')}
+  if(g.includes('bauch')||g.includes('core')||/crunch|leg raise|l-sit|v-sit|dragon flag|plank/.test(n)){add('primary','Gerader Bauchmuskel');add('secondary','Hüftbeuger','schräge Bauchmuskeln');add('stabilizer','tiefe Rumpfmuskulatur');p.zones.push('abs')}
+  if(!p.primary.length){add('primary',e?.group||'Zielmuskulatur');add('secondary','unterstützende Muskulatur');add('stabilizer','Core');p.zones.push('core')}
+  return p;
+}
+function anatomyMapSvg(e,compact=false){
+  const p=muscleProfile(e),on=z=>p.zones.includes(z)?' muscle-on':'';
+  return `<div class="anatomy-map ${compact?'compact':''}"><svg viewBox="0 0 190 128" role="img" aria-label="Beanspruchte Muskelgruppen"><g class="body-back" transform="translate(18 5)"><circle cx="38" cy="13" r="9" class="skin"/><path d="M30 24 Q38 20 46 24 L50 64 Q38 70 26 64 Z" class="skin"/><path d="M29 27 L17 55 M47 27 L59 55 M31 64 L26 108 M45 64 L50 108" class="limb"/><path d="M28 27 Q20 42 24 61 Q31 54 34 39 L35 25 Z" class="zone back${on('back')}"/><path d="M48 27 Q56 42 52 61 Q45 54 42 39 L41 25 Z" class="zone back${on('back')}"/><ellipse cx="21" cy="43" rx="4" ry="11" class="zone${on('triceps')}"/><ellipse cx="55" cy="43" rx="4" ry="11" class="zone${on('triceps')}"/><ellipse cx="30" cy="72" rx="6" ry="10" class="zone${on('glutes')}"/><ellipse cx="46" cy="72" rx="6" ry="10" class="zone${on('glutes')}"/><path d="M27 78 Q31 94 27 105" class="zone stroke-zone${on('hamstrings')}"/><path d="M49 78 Q45 94 49 105" class="zone stroke-zone${on('hamstrings')}"/></g><g class="body-front" transform="translate(96 5)"><circle cx="38" cy="13" r="9" class="skin"/><path d="M30 24 Q38 20 46 24 L50 64 Q38 70 26 64 Z" class="skin"/><path d="M29 27 L17 55 M47 27 L59 55 M31 64 L26 108 M45 64 L50 108" class="limb"/><path d="M29 29 Q38 24 47 29 L45 44 Q38 49 31 44 Z" class="zone${on('chest')}"/><ellipse cx="20" cy="41" rx="5" ry="12" class="zone${on('biceps')}"/><ellipse cx="56" cy="41" rx="5" ry="12" class="zone${on('biceps')}"/><ellipse cx="19" cy="31" rx="6" ry="7" class="zone${on('shoulder')}"/><ellipse cx="57" cy="31" rx="6" ry="7" class="zone${on('shoulder')}"/><path d="M33 45 Q38 42 43 45 L44 61 Q38 65 32 61 Z" class="zone${on('abs')}"/><ellipse cx="30" cy="78" rx="7" ry="15" class="zone${on('quads')}"/><ellipse cx="46" cy="78" rx="7" ry="15" class="zone${on('quads')}"/><ellipse cx="25" cy="103" rx="4" ry="9" class="zone${on('calves')}"/><ellipse cx="51" cy="103" rx="4" ry="9" class="zone${on('calves')}"/><path d="M18 48 L14 60 M58 48 L62 60" class="zone stroke-zone${on('forearm')}"/></g></svg><div class="muscle-map-label">Muskelkarte</div></div>`;
+}
+function muscleLegendHtml(e){const p=muscleProfile(e);return `<div class="muscle-legend detailed all-muscles"><div><i class="muscle-dot primary"></i><b>Haupt:</b> ${p.primary.join(', ')}</div><div><i class="muscle-dot secondary"></i><b>Neben:</b> ${p.secondary.join(', ')}</div><div><i class="muscle-dot stabilizer"></i><b>Stabilisation:</b> ${p.stabilizer.join(', ')}</div></div>`}
+function exerciseIllustration(e,size='small'){
+  if(movementKind(e)==='pullup') return proPullupIllustration(e,size);
+  const movement=legacyExerciseIllustration(e,size);
+  if(size==='large') return `<div class="visual-suite large"><div class="motion-panel humanized">${movement}</div>${anatomyMapSvg(e,false)}${muscleLegendHtml(e)}</div>`;
+  return `<div class="visual-suite small"><div class="motion-panel humanized">${movement}</div>${anatomyMapSvg(e,true)}</div>`;
 }
 
 function ensureWorkoutShape(){
