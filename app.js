@@ -632,7 +632,7 @@ function workoutBlock(ids,i){
   const letters=['A','B','C','D'];
   return `<section class="pairblock"><div class="pairhead"><b>Wechselblock ${letters[i]}</b><span>abwechselnd</span></div>${ids.map((id,n)=>compactExercise(getExercise(id),n+1)).join('')}</section>`
 }
-function compactExercise(e,n){if(!e)return '';const done=sessionDone(e.id),summary=latestSessionSummary(e.id),ek=exerciseSessionKcal(e.id),prog=progressionSuggestion(e);return `<div class="compact-exercise ${done?'isdone':''}"><div class="exno">${done?'✓':n}</div>${exerciseIllustration(e)}<button class="exercise-main" onclick="logExercise('${e.id}')"><b>${e.name}</b><span>${e.group} · ${e.equipment}</span>${summary?`<small class="savedset">💾 ${summary}</small>`:''}${prog?`<small class="coachhint">🎯 ${prog}</small>`:''}${ek?`<small class="savedset">🔥 ${done?'Übung':'bisher'} ≈ ${ek} kcal*</small>`:''}</button><div class="exercise-target"><b>${e.target||'3 × 8–12'}</b><span>${isDumbbellExercise(e)?'Gewicht je Hantel':(e.load||'Gewicht offen')}</span><button class="iconbtn replacequick" title="Übung ersetzen" onclick="showExerciseReplacement('${e.id}')">↔️</button></div></div>`}
+function compactExercise(e,n){if(!e)return '';const done=sessionDone(e.id),summary=latestSessionSummary(e.id),ek=exerciseSessionKcal(e.id),prog=progressionSuggestion(e);return `<div class="compact-exercise ${done?'isdone':''}"><div class="exno">${done?'✓':n}</div>${exerciseIllustration(e)}<button class="exercise-main" onclick="logExercise('${e.id}')"><b>${e.name}</b><span>${e.group} · ${e.equipment}</span>${summary?`<small class="savedset">💾 ${summary}</small>`:''}${prog?`<small class="coachhint">🎯 ${prog}</small>`:''}${ek?`<small class="savedset">🔥 ${done?'Übung':'bisher'} ≈ ${ek} kcal*</small>`:''}</button><div class="exercise-target"><b>${e.target||'3 × 8–12'}</b><span>${isDumbbellExercise(e)?'Gewicht je Hantel':(e.load||'Gewicht offen')}</span><button type="button" class="iconbtn replacequick" title="Übung ersetzen" onclick="event.stopPropagation();showExerciseReplacement('${e.id}')">↔️</button></div></div>`}
 function groupExercises(exercises,renderRow){
   const groups={};exercises.forEach(e=>(groups[e.group||'Sonstiges']??=[]).push(e));
   return Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0],'de')).map(([g,es])=>`<details class="exgroup"><summary>${g}<span>${es.length}</span></summary><div class="list">${es.map(renderRow).join('')}</div></details>`).join('')
@@ -725,7 +725,7 @@ window.logExercise=id=>{
   <div class="field"><label>Wie schwer war der Satz?</label><select id="lRpe"><option>leicht</option><option selected>passend</option><option>schwer</option><option>sehr schwer</option></select></div>
   <div class="field"><label>Dauer dieses Satzes (Min., optional)</label><input id="lMinutes" inputmode="decimal" value="" placeholder="leer = automatisch"><div class="tiny">Wenn leer, schätzt Workout RPG die Belastungsdauer aus Wiederholungen bzw. Haltezeit.</div></div>
   <button class="btn block" onclick="saveSessionSet('${id}')">💾 Satz sofort speichern</button>
-  ${ent?`<button class="btn secondary block" onclick="finishExercise('${id}')">${ent.completed?'✅ Übung abgeschlossen – weitere Sätze trotzdem möglich':'✅ Übung für heute abschließen'}</button><button class="btn secondary block" onclick="showExerciseReplacement('${id}')">↔️ Übung heute ersetzen</button>`:''}
+  ${ent?`<button class="btn secondary block" onclick="finishExercise('${id}')">${ent.completed?'✅ Übung abgeschlossen – weitere Sätze trotzdem möglich':'✅ Übung für heute abschließen'}</button><button type="button" class="btn secondary block" onclick="event.stopPropagation();showExerciseReplacement('${id}')">↔️ Übung heute ersetzen</button>`:''}
   <div class="tiny">${dumbbell?'Beispiel: 20 kg pro Hantel × 2 = 40 kg Gesamtlast.':''} Kalorien bleiben eine Schätzung aus Körpergewicht, Übungstyp und Zeit/Intensität.</div>
   </div>`)
 }
@@ -857,6 +857,20 @@ let restTimerInterval=null,restTimerRemaining=0;
 function restSecondsFor(e){const met=exerciseBaseMET(e);if(met>=5.5)return 150;if(met>=4.5)return 120;if(/curl|seitheben|trizeps|waden|crunch/i.test(e?.name||''))return 75;return 90}
 function startRestTimer(e){restTimerRemaining=restSecondsFor(e);let el=document.getElementById('restTimerWidget');if(!el){el=document.createElement('div');el.id='restTimerWidget';el.className='resttimer';document.body.appendChild(el)}const render=()=>{const m=Math.floor(restTimerRemaining/60),sec=String(restTimerRemaining%60).padStart(2,'0');el.innerHTML=`<b>⏱️ Pause ${m}:${sec}</b><div><button onclick="adjustRestTimer(-15)">−15</button><button onclick="stopRestTimer()">✕</button><button onclick="adjustRestTimer(15)">+15</button></div>`};clearInterval(restTimerInterval);render();restTimerInterval=setInterval(()=>{restTimerRemaining--;if(restTimerRemaining<=0){clearInterval(restTimerInterval);el.innerHTML='<b>⚔️ Nächster Satz bereit!</b><button onclick="stopRestTimer()">✓</button>';if(navigator.vibrate)navigator.vibrate([120,80,120]);return}render()},1000)}
 window.adjustRestTimer=n=>{restTimerRemaining=Math.max(0,restTimerRemaining+n)};window.stopRestTimer=()=>{clearInterval(restTimerInterval);document.getElementById('restTimerWidget')?.remove()}
+function equipmentAvailableForExercise(e){
+  const text=((e?.equipment||'')+' '+(e?.name||'')).toLowerCase();
+  const eq=state.equipment||{};
+  // Bodyweight/floor work needs no special equipment unless the name explicitly says otherwise.
+  if(/klimmzug|pull.?up/.test(text) && !eq.pullup) return false;
+  if(/kurzhantel|dumbbell|hantel/.test(text) && !eq.dumbbell) return false;
+  if(/bank|schrägbank/.test(text) && !eq.bench) return false;
+  if(/widerstandsband|\bband\b|bänder/.test(text) && !eq.bands) return false;
+  if(/langhantel|barbell/.test(text) && !eq.barbell) return false;
+  if(/rack/.test(text) && !eq.rack) return false;
+  if(/ringe|rings/.test(text) && !eq.rings) return false;
+  if(/dip.?barren|dipstation/.test(text) && !eq.dips) return false;
+  return true;
+}
 function replacementCandidates(id){
   const e=getExercise(id),bucket=muscleBucket(e?.group||'');
   for(const x of exerciseLibrary){
@@ -865,7 +879,7 @@ function replacementCandidates(id){
   const used=new Set(state.activeWorkout?.ids||[]);
   return state.exercises.filter(x=>x.active&&x.id!==id&&!used.has(x.id)&&equipmentAvailableForExercise(x)&&(x.group===e?.group||muscleBucket(x.group)===bucket)).sort((a,b)=>Number(b.group===e?.group)-Number(a.group===e?.group)).slice(0,8)
 }
-window.showExerciseReplacement=id=>{const e=getExercise(id),xs=replacementCandidates(id);if(!xs.length)return toast('Keine passende Alternative mit deinem Equipment gefunden');modal(`<h2>↔️ ${e.name} ersetzen</h2><p class="muted">Gleicher Trainingsbereich, vorhandenes Equipment.</p><div class="list">${xs.map(x=>`<button class="exercise replacebtn" onclick="replaceExerciseInSession('${id}','${x.id}')"><span><b>${x.name}</b><small>${x.group} · ${x.equipment}</small></span><b>Wählen</b></button>`).join('')}</div>`)}
+window.showExerciseReplacement=id=>{try{const e=getExercise(id);if(!e)return toast('Übung nicht gefunden');const xs=replacementCandidates(id);if(!xs.length)return toast('Keine passende Alternative mit deinem Equipment gefunden');modal(`<h2>↔️ ${escapeHtml(e.name)} ersetzen</h2><p class="muted">Gleicher Trainingsbereich, vorhandenes Equipment. Tippe auf eine Alternative.</p><div class="list">${xs.map(x=>`<button type="button" class="exercise replacebtn" onclick="replaceExerciseInSession('${id}','${x.id}')"><span><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.group)} · ${escapeHtml(x.equipment)}</small></span><b>Wählen</b></button>`).join('')}</div>`)}catch(err){console.error('exercise replacement',err);toast('Ersatzübungen konnten nicht geöffnet werden')}}
 function renderActiveTraining(){
   if(state.activeWorkout?.mode==='daily')showDailyTraining();else renderCustomWorkout();
 }
