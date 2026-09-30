@@ -1,14 +1,5 @@
-Workout RPG Beta V0.7 – Level Up in Real Life
+Workout RPG Beta V0.11 – Deep RPG Systems
 
-Rebranding von FitQuest auf Workout RPG Beta.
-Bestehende lokale FitQuest-Daten werden beim ersten Start automatisch übernommen.
+Neu: dynamische Charakterklasse, Skill-Tree, Klimmzug-Mastery, adaptive Bossziele, Questketten, Nemesis mit persistenten Boss-HP, kosmetische Begleiter, Readiness-Check, transparente „Warum?“-Coach-Erklärung, lokales Coach-Gedächtnis, Periodisierungs-Hinweise, Shadow-Boss und private lokale Gildenbasis. Hardware-/Vision-Labs zeigen die geplanten Workflows für Auto-Workout, Ghost Replay und Wear OS ohne eine nicht vorhandene KI-/Sensorprüfung vorzutäuschen.
 
-RPG-Sprache in V0.7:
-- LEVEL UP
-- REAL LIFE QUEST
-- BOSS FIGHT
-- SKILL UNLOCKED
-
-Animationen und Sounds sind bewusst für V0.8 vorgesehen.
-
-GitHub Pages: Alle 8 Dateien direkt ins Repository-Hauptverzeichnis hochladen und vorhandene Dateien ersetzen.
+Bestehende V0.10-Daten werden weiterverwendet. Alle Daten bleiben lokal, sofern sie nicht exportiert/geteilt werden.
